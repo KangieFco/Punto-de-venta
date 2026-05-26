@@ -53,8 +53,8 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();         // Sirve el JSON en /openapi/v1.json
-    app.UseSwaggerUI(c =>     // UI en /swagger
+    app.MapOpenApi();     
+    app.UseSwaggerUI(c => 
     {
         c.SwaggerEndpoint("/openapi/v1.json", "POS API v1");
         c.RoutePrefix = "swagger";
