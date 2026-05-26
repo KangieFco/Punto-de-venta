@@ -11,7 +11,14 @@ var builder = WebApplication.CreateBuilder(args);
 // ── Base de datos ─────────────────────────────────────────────
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")));
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlOptions => sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorNumbersToAdd: null
+        )
+    )
+);
 
 // ── JWT ───────────────────────────────────────────────────────
 var jwtKey = builder.Configuration["Jwt:Key"]!;
