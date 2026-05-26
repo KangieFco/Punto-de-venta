@@ -160,3 +160,4 @@
 /home/ciet/VOS/PosApi/src/PosApi/obj/Debug/net10.0/PosApi.pdb
 /home/ciet/VOS/PosApi/src/PosApi/obj/Debug/net10.0/PosApi.genruntimeconfig.cache
 /home/ciet/VOS/PosApi/src/PosApi/obj/Debug/net10.0/ref/PosApi.dll
+/home/ciet/VOS/PosApi/src/PosApi/obj/Debug/net10.0/PosApi.sourcelink.json
