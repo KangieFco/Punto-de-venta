@@ -46,6 +46,6 @@ public static class DbSeeder
         db.Users.Add(admin);
         await db.SaveChangesAsync();
 
-        Console.WriteLine("✅ Usuario admin creado — usuario: admin | contraseña: Admin1234!");
+        Console.WriteLine("Usuario admin creado — usuario: admin | contraseña: Admin1234!");
     }
 }
