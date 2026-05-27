@@ -32,6 +32,8 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<ICashRegisterService, CashRegisterService>();
 builder.Services.AddScoped<ISaleService, SaleService>();
+builder.Services.AddScoped<ITicketService, TicketService>();
+builder.Services.AddScoped<IReportService, ReportService>();
 
 // ── JWT ───────────────────────────────────────────────────────
 var jwtKey = builder.Configuration["Jwt:Key"]!;
