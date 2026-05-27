@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.OpenApi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using PosApi.Common;
 using PosApi.Data;
 using PosApi.Data.Seed;
 using PosApi.Middleware;
@@ -25,6 +26,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         )
     )
 );
+
+// ── Servicios Fase 4 ──────────────────────────────────────────
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
+builder.Services.AddScoped<ICashRegisterService, CashRegisterService>();
+builder.Services.AddScoped<ISaleService, SaleService>();
 
 // ── JWT ───────────────────────────────────────────────────────
 var jwtKey = builder.Configuration["Jwt:Key"]!;
