@@ -1,43 +1,22 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
+
 import ProtectedRoute from './components/layout/ProtectedRoute'
 import MainLayout from './components/layout/MainLayout'
-import  LoginPage  from './Pages/Login/LoginPage'
-import  DashboardPage  from './Pages/Dashboard/DashboardPage'
+
+import LoginPage from './Pages/Login/LoginPage'
+import DashboardPage from './Pages/Dashboard/DashboardPage'
 import Unauthorized from './Pages/Unauthorized'
 
-const POSPage = () => (
-  <div className="p-8">
-    <h1 className="text-2xl font-bold">Punto de Venta</h1>
-    <p className="text-gray-500 mt-2">Próximamente — Fase 6</p>
-  </div>
-)
-
-const ProductsPage = () => (
-  <div className="p-8">
-    <h1 className="text-2xl font-bold">Productos</h1>
-    <p className="text-gray-500 mt-2">Próximamente — Fase 6</p>
-  </div>
-)
-
-const CategoriesPage = () => (
-  <div className="p-8">
-    <h1 className="text-2xl font-bold">Categorías</h1>
-    <p className="text-gray-500 mt-2">Próximamente — Fase 6</p>
-  </div>
-)
+import CategoriesPage from './Pages/Categories/CategoriesPage'
+import ProductsPage from './Pages/Products/ProductsPage'
+import CashRegisterPage from './Pages/CashRegister/CashRegisterPage'
+import POSPage from '../src/Pages/POS/POSPage'
 
 const InventoryPage = () => (
   <div className="p-8">
     <h1 className="text-2xl font-bold">Inventario</h1>
-    <p className="text-gray-500 mt-2">Próximamente — Fase 6</p>
-  </div>
-)
-
-const CashPage = () => (
-  <div className="p-8">
-    <h1 className="text-2xl font-bold">Caja</h1>
     <p className="text-gray-500 mt-2">Próximamente — Fase 6</p>
   </div>
 )
@@ -130,7 +109,7 @@ export default function App() {
               path="/cash"
               element={
                 <ProtectedRoute roles={['Admin', 'Cajero', 'Supervisor']}>
-                  <CashPage />
+                  <CashRegisterPage />
                 </ProtectedRoute>
               }
             />
