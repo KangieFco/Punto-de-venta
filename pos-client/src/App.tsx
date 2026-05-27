@@ -1,46 +1,19 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
-
 import ProtectedRoute from './components/layout/ProtectedRoute'
 import MainLayout from './components/layout/MainLayout'
-
 import LoginPage from './Pages/Login/LoginPage'
 import DashboardPage from './Pages/Dashboard/DashboardPage'
 import Unauthorized from './Pages/Unauthorized'
-
 import CategoriesPage from './Pages/Categories/CategoriesPage'
 import ProductsPage from './Pages/Products/ProductsPage'
 import CashRegisterPage from './Pages/CashRegister/CashRegisterPage'
 import POSPage from '../src/Pages/POS/POSPage'
-
-const InventoryPage = () => (
-  <div className="p-8">
-    <h1 className="text-2xl font-bold">Inventario</h1>
-    <p className="text-gray-500 mt-2">Próximamente — Fase 6</p>
-  </div>
-)
-
-const SalesPage = () => (
-  <div className="p-8">
-    <h1 className="text-2xl font-bold">Ventas</h1>
-    <p className="text-gray-500 mt-2">Próximamente — Fase 6</p>
-  </div>
-)
-
-const UsersPage = () => (
-  <div className="p-8">
-    <h1 className="text-2xl font-bold">Usuarios</h1>
-    <p className="text-gray-500 mt-2">Próximamente — Fase 6</p>
-  </div>
-)
-
-const ReportsPage = () => (
-  <div className="p-8">
-    <h1 className="text-2xl font-bold">Reportes</h1>
-    <p className="text-gray-500 mt-2">Próximamente — Fase 6</p>
-  </div>
-)
+import InventoryPage from './Pages/Inventory/InventoryPage'
+import SalesPage     from './Pages/Sales/SalesPage'
+import UsersPage     from './Pages/Users/UsersPage'
+import ReportsPage   from './Pages/Reports/ReportsPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
