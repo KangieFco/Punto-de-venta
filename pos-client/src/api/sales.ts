@@ -33,6 +33,7 @@ export interface CreateSaleRequest {
   paymentMethod:  number
   amountReceived: number
   discount:       number
+  cashRegisterId: number
 }
 
 export const salesApi = {

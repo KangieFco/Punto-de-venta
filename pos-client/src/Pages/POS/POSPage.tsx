@@ -1,49 +1,80 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { cashRegistersApi } from '../../api/cashRegisters'
-import { productsApi }       from '../../api/products'
-import { useCartStore }      from '../../store/cartStore'
-import Cart        from './Cart'
-import PaymentModal from './PaymentModal'
 import { ShoppingCart, Barcode } from 'lucide-react'
 
+import { cashRegistersApi } from '../../api/cashRegisters'
+import { productsApi } from '../../api/products'
+import { useCartStore } from '../../store/cartStore'
+
+import Cart from './Cart'
+import PaymentModal from './PaymentModal'
+import PrinterSelector from '../../components/PrinterSelector'
+
 export default function POSPage() {
-  const barcodeRef  = useRef<HTMLInputElement>(null)
-  const [barcode, setBarcode]       = useState('')
+  const barcodeRef = useRef<HTMLInputElement>(null)
+
+  const [barcode, setBarcode] = useState('')
   const [showPayment, setShowPayment] = useState(false)
+
   const { items, addItem } = useCartStore()
 
-  // Verificar caja abierta
-  const { data: cashRegister } = useQuery({
+  const {
+    data: cashRegister,
+    isLoading,
+  } = useQuery({
     queryKey: ['cash-register', 'current'],
-    queryFn:  () => cashRegistersApi.getCurrent().then(r => r.data.data ?? null),
+    queryFn: () => cashRegistersApi.getCurrent().then(r => r.data.data ?? null),
   })
 
-  // Mantener foco en el input de código de barras
   useEffect(() => {
-    const keepFocus = () => barcodeRef.current?.focus()
+    const keepFocus = (e?: MouseEvent) => {
+      const target = e?.target as HTMLElement | null
+
+      if (
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'BUTTON' ||
+        target?.tagName === 'SELECT' ||
+        target?.tagName === 'TEXTAREA'
+      ) {
+        return
+      }
+
+      barcodeRef.current?.focus()
+    }
+
     keepFocus()
     document.addEventListener('click', keepFocus)
-    return () => document.removeEventListener('click', keepFocus)
+
+    return () => {
+      document.removeEventListener('click', keepFocus)
+    }
   }, [])
 
   const handleBarcode = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter') return
+
     const code = barcode.trim()
+
     if (!code) return
+
     setBarcode('')
 
     try {
       const res = await productsApi.getByBarcode(code)
-      const product = res.data.data!
+      const product = res.data.data
+
+      if (!product) {
+        throw new Error('Producto no encontrado')
+      }
+
       addItem(product)
       toast.success(`${product.name} agregado`, { duration: 1500 })
     } catch {
-      // Intentar por código interno
       try {
         const res = await productsApi.search(code)
         const found = res.data.data
+
         if (found && found.length === 1) {
           addItem(found[0])
           toast.success(`${found[0].name} agregado`, { duration: 1500 })
@@ -54,6 +85,14 @@ export default function POSPage() {
         toast.error(`Producto "${code}" no encontrado`)
       }
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="h-full flex items-center justify-center p-8">
+        <p className="text-gray-500">Verificando caja abierta...</p>
+      </div>
+    )
   }
 
   if (!cashRegister) {
@@ -72,15 +111,14 @@ export default function POSPage() {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Columna izquierda — input y búsqueda */}
       <div className="flex-1 flex flex-col bg-gray-50 overflow-hidden">
-        {/* Barra superior */}
         <div className="bg-white border-b px-6 py-4 flex items-center gap-4">
           <div className="relative flex-1 max-w-lg">
             <Barcode
               size={18}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             />
+
             <input
               ref={barcodeRef}
               value={barcode}
@@ -91,12 +129,16 @@ export default function POSPage() {
               autoComplete="off"
             />
           </div>
-          <div className="text-sm text-gray-500">
+
+          <div className="text-sm text-gray-500 whitespace-nowrap">
             Caja #{cashRegister.id} — {cashRegister.userFullName}
+          </div>
+
+          <div className="ml-auto">
+            <PrinterSelector />
           </div>
         </div>
 
-        {/* Área central — vacío o instrucciones */}
         <div className="flex-1 flex items-center justify-center">
           {items.length === 0 ? (
             <div className="text-center text-gray-400">
@@ -114,10 +156,8 @@ export default function POSPage() {
         </div>
       </div>
 
-      {/* Columna derecha — carrito */}
       <Cart onCheckout={() => setShowPayment(true)} />
 
-      {/* Modal de cobro */}
       {showPayment && (
         <PaymentModal
           cashRegisterId={cashRegister.id}
