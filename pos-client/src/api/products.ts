@@ -7,6 +7,7 @@ export interface Product {
   barcode:      string | null
   name:         string
   description:  string | null
+  imageUrl:     string | null
   categoryId:   number
   categoryName: string
   costPrice:    number
@@ -23,6 +24,7 @@ export interface SaveProductRequest {
   barcode?:    string
   name:        string
   description?: string
+  imageUrl?:    string
   categoryId:  number
   costPrice:   number
   salePrice:   number
@@ -45,6 +47,13 @@ export const productsApi = {
 
   getByBarcode: (barcode: string) =>
     client.get<ApiResponse<Product>>(`/products/barcode/${barcode}`),
+
+  uploadImage: (id: number, file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+
+    return client.post<ApiResponse<string>>(`/products/${id}/image`, form)
+  },
 
   getLowStock:  () =>
     client.get<ApiResponse<Product[]>>('/products/low-stock'),

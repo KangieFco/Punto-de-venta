@@ -7,6 +7,7 @@ public class Product
     public string? Barcode { get; set; }                    // Código de barras
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
+    public string? ImageUrl    { get; set; } 
     public int CategoryId { get; set; }
     public decimal CostPrice { get; set; }
     public decimal SalePrice { get; set; }

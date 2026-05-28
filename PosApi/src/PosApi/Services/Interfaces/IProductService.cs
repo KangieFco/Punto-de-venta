@@ -11,6 +11,7 @@ public interface IProductService
     Task<List<ProductDto>> GetLowStockAsync();
     Task<ProductDto> CreateAsync(SaveProductRequest request);
     Task<ProductDto> UpdateAsync(int id, SaveProductRequest request);
+    Task UpdateImageAsync(int id, string imageUrl);
     Task ActivateAsync(int id);
     Task DeactivateAsync(int id);
 }

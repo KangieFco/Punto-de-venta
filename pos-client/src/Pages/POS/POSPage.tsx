@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { ShoppingCart, Barcode } from 'lucide-react'
+import { Barcode, ShoppingCart } from 'lucide-react'
 
 import { cashRegistersApi } from '../../api/cashRegisters'
 import { productsApi } from '../../api/products'
@@ -9,6 +9,7 @@ import { useCartStore } from '../../store/cartStore'
 
 import Cart from './Cart'
 import PaymentModal from './PaymentModal'
+import ProductFeed from './ProductFeed'
 import PrinterSelector from '../../components/PrinterSelector'
 
 export default function POSPage() {
@@ -19,6 +20,7 @@ export default function POSPage() {
 
   const { items, addItem } = useCartStore()
 
+  // Verificar caja abierta
   const {
     data: cashRegister,
     isLoading,
@@ -27,16 +29,13 @@ export default function POSPage() {
     queryFn: () => cashRegistersApi.getCurrent().then(r => r.data.data ?? null),
   })
 
+  // Mantener foco siempre en el input de código de barras
   useEffect(() => {
     const keepFocus = (e?: MouseEvent) => {
       const target = e?.target as HTMLElement | null
+      const tag = target?.tagName
 
-      if (
-        target?.tagName === 'INPUT' ||
-        target?.tagName === 'BUTTON' ||
-        target?.tagName === 'SELECT' ||
-        target?.tagName === 'TEXTAREA'
-      ) {
+      if (tag && ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(tag)) {
         return
       }
 
@@ -69,27 +68,29 @@ export default function POSPage() {
       }
 
       addItem(product)
-      toast.success(`${product.name} agregado`, { duration: 1500 })
+      toast.success(`✓ ${product.name}`, { duration: 1200 })
     } catch {
       try {
         const res = await productsApi.search(code)
-        const found = res.data.data
+        const found = res.data.data ?? []
 
-        if (found && found.length === 1) {
+        if (found.length === 1) {
           addItem(found[0])
-          toast.success(`${found[0].name} agregado`, { duration: 1500 })
+          toast.success(`✓ ${found[0].name}`, { duration: 1200 })
+        } else if (found.length > 1) {
+          toast.error('Varios productos encontrados, sé más específico')
         } else {
-          toast.error(`Producto "${code}" no encontrado`)
+          toast.error(`"${code}" no encontrado`)
         }
       } catch {
-        toast.error(`Producto "${code}" no encontrado`)
+        toast.error(`"${code}" no encontrado`)
       }
     }
   }
 
   if (isLoading) {
     return (
-      <div className="h-full flex items-center justify-center p-8">
+      <div className="h-screen flex items-center justify-center bg-gray-50">
         <p className="text-gray-500">Verificando caja abierta...</p>
       </div>
     )
@@ -97,12 +98,16 @@ export default function POSPage() {
 
   if (!cashRegister) {
     return (
-      <div className="h-full flex items-center justify-center p-8">
+      <div className="h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <ShoppingCart size={64} className="mx-auto text-gray-300 mb-4" />
-          <h2 className="text-xl font-bold text-gray-700">Caja cerrada</h2>
-          <p className="text-gray-500 mt-2">
-            Ve a <strong>Caja</strong> y abre una caja para comenzar a vender.
+          <ShoppingCart size={72} className="mx-auto text-gray-200 mb-4" />
+
+          <h2 className="text-xl font-bold text-gray-600">
+            Caja cerrada
+          </h2>
+
+          <p className="text-gray-400 mt-2 text-sm">
+            Ve a <strong>Caja</strong> y abre una caja para comenzar.
           </p>
         </div>
       </div>
@@ -110,12 +115,15 @@ export default function POSPage() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <div className="flex-1 flex flex-col bg-gray-50 overflow-hidden">
-        <div className="bg-white border-b px-6 py-4 flex items-center gap-4">
-          <div className="relative flex-1 max-w-lg">
+    <div className="flex h-screen overflow-hidden bg-gray-100">
+      {/* Columna izquierda */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Barra superior */}
+        <div className="bg-white border-b px-4 py-3 flex items-center gap-3 shadow-sm">
+          {/* Input código de barras */}
+          <div className="relative flex-1 max-w-md">
             <Barcode
-              size={18}
+              size={17}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             />
 
@@ -124,23 +132,28 @@ export default function POSPage() {
               value={barcode}
               onChange={e => setBarcode(e.target.value)}
               onKeyDown={handleBarcode}
-              className="input pl-10 text-base font-mono"
-              placeholder="Escanea o escribe código de barras..."
+              className="input pl-9 font-mono text-sm"
+              placeholder="Escanea código de barras o escribe..."
               autoComplete="off"
+              spellCheck={false}
             />
           </div>
 
-          <div className="text-sm text-gray-500 whitespace-nowrap">
+          {/* Info de caja */}
+          <div className="hidden md:flex items-center gap-2 text-xs text-gray-500 bg-gray-50 border rounded-lg px-3 py-2">
+            <span className="w-2 h-2 bg-green-500 rounded-full" />
             Caja #{cashRegister.id} — {cashRegister.userFullName}
           </div>
 
+          {/* Selector de impresora */}
           <div className="ml-auto">
             <PrinterSelector />
           </div>
         </div>
 
-        <div className="flex-1 flex items-center justify-center">
-          {items.length === 0 ? (
+        {/* Feed de productos escaneados */}
+        {items.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center">
             <div className="text-center text-gray-400">
               <Barcode size={64} className="mx-auto mb-4 opacity-30" />
               <p className="text-lg">Escanea un producto para comenzar</p>
@@ -148,16 +161,16 @@ export default function POSPage() {
                 El cursor siempre está listo para el lector
               </p>
             </div>
-          ) : (
-            <p className="text-gray-400">
-              {items.length} producto(s) en el carrito →
-            </p>
-          )}
-        </div>
+          </div>
+        ) : (
+          <ProductFeed />
+        )}
       </div>
 
+      {/* Columna derecha — carrito */}
       <Cart onCheckout={() => setShowPayment(true)} />
 
+      {/* Modal de cobro */}
       {showPayment && (
         <PaymentModal
           cashRegisterId={cashRegister.id}

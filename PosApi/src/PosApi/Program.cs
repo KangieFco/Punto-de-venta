@@ -14,8 +14,6 @@ using PosApi.Services.Interfaces;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// ── Base de datos ─────────────────────────────────────────────
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -26,18 +24,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         )
     )
 );
-
-// ── Servicios Fase 4 ──────────────────────────────────────────
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<ICashRegisterService, CashRegisterService>();
 builder.Services.AddScoped<ISaleService, SaleService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<IReportService, ReportService>();
-
-// ── JWT ───────────────────────────────────────────────────────
 var jwtKey = builder.Configuration["Jwt:Key"]!;
-
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -56,8 +49,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
-
-// ── CORS ──────────────────────────────────────────────────────
 builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
         policy.WithOrigins("http://localhost:5173")
@@ -65,33 +56,25 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod()
     )
 );
-
-// ── Controllers + OpenAPI nativo .NET 10 ─────────────────────
 builder.Services.AddControllers();
-
 builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
     options.AddOperationTransformer<AuthOperationTransformer>();
 });
-
-// ── Servicios ─────────────────────────────────────────────────
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductService, ProductService>();
-
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
-// ── Middleware ────────────────────────────────────────────────
 app.UseMiddleware<ErrorHandlingMiddleware>();
-
 if (app.Environment.IsDevelopment())
 {
+    app.UseStaticFiles();
     app.MapOpenApi();
-
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/openapi/v1.json", "POS API v1");
@@ -100,25 +83,18 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowFrontend");
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
-
-// ── Migración + Seed ──────────────────────────────────────────
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
     db.Database.Migrate();
-
     await DbSeeder.SeedAsync(db);
 }
 
 app.Run();
 
-// ── OpenAPI JWT Bearer ────────────────────────────────────────
 internal sealed class BearerSecuritySchemeTransformer(
     IAuthenticationSchemeProvider authenticationSchemeProvider
 ) : IOpenApiDocumentTransformer
@@ -129,7 +105,6 @@ internal sealed class BearerSecuritySchemeTransformer(
         CancellationToken cancellationToken)
     {
         var authenticationSchemes = await authenticationSchemeProvider.GetAllSchemesAsync();
-
         if (!authenticationSchemes.Any(authScheme =>
                 authScheme.Name == JwtBearerDefaults.AuthenticationScheme))
         {
@@ -167,14 +142,11 @@ internal sealed class AuthOperationTransformer : IOpenApiOperationTransformer
         {
             return Task.CompletedTask;
         }
-
         operation.Security ??= new List<OpenApiSecurityRequirement>();
-
         operation.Security.Add(new OpenApiSecurityRequirement
         {
             [new OpenApiSecuritySchemeReference("Bearer", context.Document)] = []
         });
-
         return Task.CompletedTask;
     }
 }

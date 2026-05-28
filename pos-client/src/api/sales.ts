@@ -34,6 +34,7 @@ export interface CreateSaleRequest {
   amountReceived: number
   discount:       number
   cashRegisterId: number
+  exchangeRate?:  number
 }
 
 export const salesApi = {

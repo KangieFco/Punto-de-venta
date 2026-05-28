@@ -149,6 +149,15 @@ public class ProductService : IProductService
         await _db.SaveChangesAsync();
     }
 
+    public async Task UpdateImageAsync(int id, string imageUrl)
+    {
+        var product = await _db.Products.FindAsync(id)
+            ?? throw new NotFoundException("Producto", id);
+
+        product.ImageUrl  = imageUrl;
+        product.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+    }
     public async Task DeactivateAsync(int id)
     {
         var product = await _db.Products.FindAsync(id)
@@ -168,7 +177,7 @@ public class ProductService : IProductService
         Description  = p.Description,
         CategoryId   = p.CategoryId,
         CategoryName = p.Category.Name,
-        CostPrice    = p.CostPrice,
+        ImageUrl     = p.ImageUrl,
         SalePrice    = p.SalePrice,
         Stock        = p.Stock,
         MinStock     = p.MinStock,
