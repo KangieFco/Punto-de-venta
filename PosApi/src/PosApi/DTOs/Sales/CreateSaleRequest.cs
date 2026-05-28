@@ -16,6 +16,9 @@ public class CreateSaleRequest
 
     [Range(0, double.MaxValue)]
     public decimal Discount { get; set; } = 0;
+    
+    [Range(0.01, double.MaxValue)]
+    public decimal ExchangeRate { get; set; } = 1;
 }
 
 public class SaleItemRequest

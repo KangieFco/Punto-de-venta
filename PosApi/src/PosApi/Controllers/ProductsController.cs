@@ -69,6 +69,38 @@ public class ProductsController : ControllerBase
             new { id = product.Id },
             ApiResponse<ProductDto>.Ok(product, "Producto creado correctamente."));
     }
+    // POST /api/products/{id}/image
+    [HttpPost("{id}/image")]
+    [Authorize(Roles = "Admin,Inventario")]
+    public async Task<IActionResult> UploadImage(
+        int id, IFormFile file)
+    {
+        if (file is null || file.Length == 0)
+            return BadRequest(ApiResponse.Fail("Archivo inválido."));
+
+        var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+        var ext     = Path.GetExtension(file.FileName).ToLower();
+        if (!allowed.Contains(ext))
+            return BadRequest(ApiResponse.Fail("Solo JPG, PNG o WEBP."));
+
+        var product = await _productService.GetByIdAsync(id);
+
+        // Guardar archivo
+        var fileName  = $"{id}_{Guid.NewGuid():N}{ext}";
+        var folder    = Path.Combine(
+            Directory.GetCurrentDirectory(), "wwwroot", "images", "products");
+        Directory.CreateDirectory(folder);
+        var filePath  = Path.Combine(folder, fileName);
+
+        using (var stream = System.IO.File.Create(filePath))
+            await file.CopyToAsync(stream);
+
+        // Guardar URL en producto
+        var imageUrl = $"/images/products/{fileName}";
+        await _productService.UpdateImageAsync(id, imageUrl);
+
+        return Ok(ApiResponse<string>.Ok(imageUrl, "Imagen subida correctamente."));
+    }
 
     // PUT /api/products/{id}
     [HttpPut("{id}")]

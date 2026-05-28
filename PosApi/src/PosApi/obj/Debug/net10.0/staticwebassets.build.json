@@ -1,1 +1,1 @@
-{"Version":1,"Hash":"pGIoxTYC7M0GjDPbUaZvgx9Lu+5z4nbZE+BeEq8EQkg=","Source":"PosApi","BasePath":"/","Mode":"Root","ManifestType":"Build","ReferencedProjectsConfiguration":[],"DiscoveryPatterns":[],"Assets":[],"Endpoints":[]}
+{"Version":1,"Hash":"+hN+5E9I7OtV1QWrmdfSR3vEbNP8jibHvPjpulJlKus=","Source":"PosApi","BasePath":"/","Mode":"Root","ManifestType":"Build","ReferencedProjectsConfiguration":[],"DiscoveryPatterns":[{"Name":"PosApi/wwwroot","Source":"PosApi","ContentRoot":"/home/ciet/VOS/PosApi/src/PosApi/wwwroot/","BasePath":"/","Pattern":"**"}],"Assets":[],"Endpoints":[]}
