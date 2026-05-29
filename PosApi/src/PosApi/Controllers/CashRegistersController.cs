@@ -23,6 +23,7 @@ public class CashRegistersController : ControllerBase
 
     // POST /api/cash-registers/open
     [HttpPost("open")]
+    [Authorize(Roles = "Admin,Inventario,Cajero")]
     public async Task<IActionResult> Open([FromBody] OpenCashRegisterRequest request)
     {
         var result = await _cashService.OpenAsync(request, _currentUser.UserId);
@@ -31,6 +32,7 @@ public class CashRegistersController : ControllerBase
 
     // POST /api/cash-registers/{id}/close
     [HttpPost("{id}/close")]
+    [Authorize(Roles = "Admin,Inventario,Cajero")]
     public async Task<IActionResult> Close(int id,
         [FromBody] CloseCashRegisterRequest request)
     {
@@ -40,6 +42,7 @@ public class CashRegistersController : ControllerBase
 
     // GET /api/cash-registers/current
     [HttpGet("current")]
+    [Authorize(Roles = "Admin,Inventario,Cajero")]
     public async Task<IActionResult> GetCurrent()
     {
         var result = await _cashService.GetCurrentOpenAsync(_currentUser.UserId);

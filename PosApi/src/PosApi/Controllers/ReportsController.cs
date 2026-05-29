@@ -8,7 +8,7 @@ namespace PosApi.Controllers;
 
 [ApiController]
 [Route("api/reports")]
-[Authorize(Roles = "Admin,Supervisor")]
+[Authorize(Roles = "Admin,Supervisor,Cajero,Inventario")]
 public class ReportsController : ControllerBase
 {
     private readonly IReportService _reportService;

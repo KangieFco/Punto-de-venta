@@ -23,6 +23,7 @@ public class InventoryController : ControllerBase
 
     // GET /api/inventory/movements
     [HttpGet("movements")]
+    [Authorize(Roles = "Admin,Inventario,Cajero")]
     public async Task<IActionResult> GetMovements([FromQuery] int? productId = null)
     {
         var movements = await _inventoryService.GetMovementsAsync(productId);
@@ -39,7 +40,7 @@ public class InventoryController : ControllerBase
 
     // POST /api/inventory/entry
     [HttpPost("entry")]
-    [Authorize(Roles = "Admin,Inventario")]
+    [Authorize(Roles = "Admin,Inventario,Cajero")]
     public async Task<IActionResult> Entry([FromBody] InventoryEntryRequest request)
     {
         await _inventoryService.EntryAsync(request, _currentUser.UserId);
@@ -66,6 +67,7 @@ public class InventoryController : ControllerBase
 
     // GET /api/inventory/low-stock
     [HttpGet("low-stock")]
+    [Authorize(Roles = "Admin,Inventario,Supervisor,Cajero")]
     public async Task<IActionResult> LowStock()
     {
         var movements = await _inventoryService.GetMovementsAsync();
