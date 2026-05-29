@@ -7,11 +7,13 @@ import { inventoryApi, type InventoryMovement } from '../../api/inventory'
 import { productsApi, type Product } from '../../api/products'
 import Modal from '../../components/ui/Modal'
 import Badge from '../../components/ui/Badge'
+import { usePermissions } from '../../hooks/usePermissions'
 
 type ModalType = 'entry' | 'output' | 'adjustment' | null
 
 export default function InventoryPage() {
   const qc = useQueryClient()
+  const p = usePermissions()
   const [modal,      setModal]      = useState<ModalType>(null)
   const [filterProd, setFilterProd] = useState('')
 
@@ -42,14 +44,8 @@ export default function InventoryPage() {
   return (
     <div className="p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Inventario</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            {filtered.length} movimientos
-          </p>
-        </div>
-        <div className="flex gap-3">
+      <div className="flex gap-3">
+        {p.canAddEntry && (
           <button
             onClick={() => setModal('entry')}
             className="btn-secondary flex items-center gap-2"
@@ -57,6 +53,8 @@ export default function InventoryPage() {
             <ArrowDownCircle size={18} className="text-green-600" />
             Entrada
           </button>
+        )}
+        {p.canAddOutput && (
           <button
             onClick={() => setModal('output')}
             className="btn-secondary flex items-center gap-2"
@@ -64,6 +62,8 @@ export default function InventoryPage() {
             <ArrowUpCircle size={18} className="text-red-600" />
             Salida
           </button>
+        )}
+        {p.canAddAdjustment && (
           <button
             onClick={() => setModal('adjustment')}
             className="btn-primary flex items-center gap-2"
@@ -71,7 +71,7 @@ export default function InventoryPage() {
             <SlidersHorizontal size={18} />
             Ajuste
           </button>
-        </div>
+        )}
       </div>
 
       {/* Stock actual por producto */}
@@ -226,6 +226,11 @@ export default function InventoryPage() {
         <InventoryModal
           type={modal}
           products={products ?? []}
+          allowedTypes={{
+            entry:      p.canAddEntry,
+            output:     p.canAddOutput,
+            adjustment: p.canAddAdjustment,
+          }}
           onClose={() => setModal(null)}
           onSuccess={() => {
             qc.invalidateQueries({ queryKey: ['inventory-movements'] })

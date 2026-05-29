@@ -14,6 +14,7 @@ import InventoryPage from './Pages/Inventory/InventoryPage'
 import SalesPage     from './Pages/Sales/SalesPage'
 import UsersPage     from './Pages/Users/UsersPage'
 import ReportsPage   from './Pages/Reports/ReportsPage'
+import ClearToastsOnRouteChange from '../src/components/ClearToastOnRouteChange'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,6 +29,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <ClearToastsOnRouteChange />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/unauthorized" element={<Unauthorized />} />

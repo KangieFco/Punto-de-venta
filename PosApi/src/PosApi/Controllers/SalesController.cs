@@ -58,7 +58,7 @@ public class SalesController : ControllerBase
 
     // POST /api/sales/{id}/cancel
     [HttpPost("{id}/cancel")]
-    [Authorize(Roles = "Admin,Supervisor")]
+    [Authorize(Roles = "Admin,Supervisor,Cajero")]
     public async Task<IActionResult> Cancel(int id,
         [FromBody] CancelSaleRequest request)
     {

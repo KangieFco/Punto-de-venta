@@ -1,10 +1,8 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import {
-  ShoppingCart, Package, LayoutDashboard, Users,
-  BarChart2, DollarSign, LogOut, AlertTriangle, Tag
-} from 'lucide-react'
+import { ShoppingCart, Package, LayoutDashboard, Users, BarChart2, DollarSign, LogOut, AlertTriangle, Tag } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { authApi } from '../../api/auth'
+import { usePermissions } from '../../hooks/usePermissions'
 
 const navItems = [
   { to: '/dashboard',  label: 'Dashboard',  icon: LayoutDashboard, roles: ['Admin','Supervisor','Cajero','Inventario'] },
@@ -21,6 +19,7 @@ const navItems = [
 export default function Sidebar() {
   const { user, logout } = useAuthStore()
   const navigate         = useNavigate()
+  const p                = usePermissions()
 
   const handleLogout = async () => {
     await authApi.logout().catch(() => {})
@@ -32,13 +31,21 @@ export default function Sidebar() {
     item => !item.roles || item.roles.includes(user?.role ?? '')
   )
 
+  const roleColors: Record<string, string> = {
+    Admin:      'bg-red-500',
+    Cajero:     'bg-green-500',
+    Inventario: 'bg-yellow-500',
+    Supervisor: 'bg-blue-500',
+    Almacen:    'bg-purple-500',
+  }
+
   return (
     <aside className="w-64 bg-gray-900 text-white flex flex-col min-h-screen">
       {/* Logo */}
       <div className="px-6 py-5 border-b border-gray-700">
         <h1 className="text-xl font-bold text-white">🏪 POS System</h1>
         <p className="text-xs text-gray-400 mt-1">{user?.fullName}</p>
-        <span className="text-xs bg-primary-600 px-2 py-0.5 rounded-full">
+        <span className={`text-xs ${roleColors[user?.role ?? ''] || 'bg-gray-500'} px-2 py-0.5 rounded-full`}>
           {user?.role}
         </span>
       </div>

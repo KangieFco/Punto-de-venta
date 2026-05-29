@@ -113,7 +113,7 @@ public class ProductsController : ControllerBase
 
     // PATCH /api/products/{id}/activate
     [HttpPatch("{id}/activate")]
-    [Authorize(Roles = "Admin,Inventario")]
+    [Authorize(Roles = "Admin,Inventario,Cajero")]
     public async Task<IActionResult> Activate(int id)
     {
         await _productService.ActivateAsync(id);
@@ -122,7 +122,7 @@ public class ProductsController : ControllerBase
 
     // PATCH /api/products/{id}/deactivate
     [HttpPatch("{id}/deactivate")]
-    [Authorize(Roles = "Admin,Inventario")]
+    [Authorize(Roles = "Admin,Inventario,Cajero")]
     public async Task<IActionResult> Deactivate(int id)
     {
         await _productService.DeactivateAsync(id);
