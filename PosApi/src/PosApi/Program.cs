@@ -27,7 +27,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 builder.Services.AddHttpContextAccessor();
-
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -59,7 +58,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -71,7 +69,6 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddControllers();
-
 builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
@@ -79,12 +76,7 @@ builder.Services.AddOpenApi(options =>
 });
 
 var app = builder.Build();
-
 app.UseMiddleware<ErrorHandlingMiddleware>();
-
-// Esto permite servir archivos desde wwwroot.
-// Ejemplo: wwwroot/images/products/foto.png
-// URL: http://localhost:5227/images/products/foto.png
 app.UseStaticFiles();
 
 if (app.Environment.IsDevelopment())
@@ -99,15 +91,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowFrontend");
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
-// Seed de datos iniciales.
-// OJO: ya no ejecutamos db.Database.Migrate() aquí,
-// porque eso estaba causando el error de PendingModelChanges.
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -127,7 +114,6 @@ internal sealed class BearerSecuritySchemeTransformer(
         CancellationToken cancellationToken)
     {
         var authenticationSchemes = await authenticationSchemeProvider.GetAllSchemesAsync();
-
         if (!authenticationSchemes.Any(authScheme =>
                 authScheme.Name == JwtBearerDefaults.AuthenticationScheme))
         {
@@ -135,7 +121,6 @@ internal sealed class BearerSecuritySchemeTransformer(
         }
 
         document.Components ??= new OpenApiComponents();
-
         document.Components.SecuritySchemes ??=
             new Dictionary<string, IOpenApiSecurityScheme>();
 
@@ -165,14 +150,11 @@ internal sealed class AuthOperationTransformer : IOpenApiOperationTransformer
         {
             return Task.CompletedTask;
         }
-
         operation.Security ??= new List<OpenApiSecurityRequirement>();
-
         operation.Security.Add(new OpenApiSecurityRequirement
         {
             [new OpenApiSecuritySchemeReference("Bearer", context.Document)] = []
         });
-
         return Task.CompletedTask;
     }
 }

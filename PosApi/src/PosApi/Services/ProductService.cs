@@ -74,11 +74,9 @@ public class ProductService : IProductService
 
     public async Task<ProductDto> CreateAsync(SaveProductRequest request)
     {
-        // Código interno único
+
         if (await _db.Products.AnyAsync(p => p.Code == request.Code.Trim()))
             throw new BusinessException($"El código '{request.Code}' ya está en uso.");
-
-        // Código de barras único si se proporcionó
         if (!string.IsNullOrWhiteSpace(request.Barcode) &&
             await _db.Products.AnyAsync(p => p.Barcode == request.Barcode.Trim()))
             throw new BusinessException($"El código de barras '{request.Barcode}' ya está en uso.");

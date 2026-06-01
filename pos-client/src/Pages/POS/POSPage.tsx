@@ -20,7 +20,6 @@ export default function POSPage() {
 
   const { items, addItem } = useCartStore()
 
-  // Verificar caja abierta
   const {
     data: cashRegister,
     isLoading,
@@ -29,7 +28,6 @@ export default function POSPage() {
     queryFn: () => cashRegistersApi.getCurrent().then(r => r.data.data ?? null),
   })
 
-  // Mantener foco siempre en el input de código de barras
   useEffect(() => {
     const keepFocus = (e?: MouseEvent) => {
       const target = e?.target as HTMLElement | null
@@ -38,13 +36,11 @@ export default function POSPage() {
       if (tag && ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(tag)) {
         return
       }
-
       barcodeRef.current?.focus()
     }
 
     keepFocus()
     document.addEventListener('click', keepFocus)
-
     return () => {
       document.removeEventListener('click', keepFocus)
     }
@@ -54,15 +50,12 @@ export default function POSPage() {
     if (e.key !== 'Enter') return
 
     const code = barcode.trim()
-
     if (!code) return
-
     setBarcode('')
 
     try {
       const res = await productsApi.getByBarcode(code)
       const product = res.data.data
-
       if (!product) {
         throw new Error('Producto no encontrado')
       }
@@ -116,9 +109,7 @@ export default function POSPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100">
-      {/* Columna izquierda */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Barra superior */}
         <div className="bg-white border-b px-4 py-3 flex items-center gap-3 shadow-sm">
           {/* Input código de barras */}
           <div className="relative flex-1 max-w-md">
@@ -144,8 +135,7 @@ export default function POSPage() {
             <span className="w-2 h-2 bg-green-500 rounded-full" />
             Caja #{cashRegister.id} — {cashRegister.userFullName}
           </div>
-
-          {/* Selector de impresora */}
+          
           <div className="ml-auto">
             <PrinterSelector />
           </div>
@@ -158,7 +148,6 @@ export default function POSPage() {
               <Barcode size={64} className="mx-auto mb-4 opacity-30" />
               <p className="text-lg">Escanea un producto para comenzar</p>
               <p className="text-sm mt-1">
-                El cursor siempre está listo para el lector
               </p>
             </div>
           </div>
@@ -170,7 +159,6 @@ export default function POSPage() {
       {/* Columna derecha — carrito */}
       <Cart onCheckout={() => setShowPayment(true)} />
 
-      {/* Modal de cobro */}
       {showPayment && (
         <PaymentModal
           cashRegisterId={cashRegister.id}
