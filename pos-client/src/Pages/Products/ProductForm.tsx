@@ -33,7 +33,6 @@ export default function ProductForm({ product, onClose }: Props) {
     barcode: p.barcode ?? undefined,
     name: p.name,
     description: p.description ?? undefined,
-    imageUrl: p.imageUrl ?? undefined,
     categoryId: p.categoryId,
     costPrice: p.costPrice,
     salePrice: p.salePrice,
@@ -76,15 +75,18 @@ export default function ProductForm({ product, onClose }: Props) {
 
       qc.invalidateQueries({ queryKey: ['products'] })
     } catch (err: any) {
-      console.error('Error al subir imagen:', err.response?.data ?? err)
+    console.error(
+      'Error al subir imagen completo:',
+      JSON.stringify(err.response?.data, null, 2)
+    )
 
-      setPreview(getImageUrl(product.imageUrl) ?? null)
+    console.error('Errores:', err.response?.data?.errors)
 
-      toast.error(
-        err.response?.data?.message ??
-          err.response?.data?.error ??
-          'Error al subir imagen'
-      )
+    toast.error(
+      err.response?.data?.message ??
+        err.response?.data?.title ??
+        'Error al subir imagen'
+    )
     } finally {
       setUploading(false)
       URL.revokeObjectURL(temporalPreview)

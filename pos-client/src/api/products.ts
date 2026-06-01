@@ -2,71 +2,74 @@ import client from './client'
 import type { ApiResponse } from '../types/api'
 
 export interface Product {
-  id:           number
-  code:         string
-  barcode:      string | null
-  name:         string
-  description:  string | null
-  imageUrl:     string | null
-  categoryId:   number
+  id: number
+  code: string
+  barcode: string | null
+  name: string
+  description: string | null
+  imageUrl: string | null
+  categoryId: number
   categoryName: string
-  costPrice:    number
-  salePrice:    number
-  stock:        number
-  minStock:     number
-  unit:         string
-  active:       boolean
-  isLowStock:   boolean
+  costPrice: number
+  salePrice: number
+  stock: number
+  minStock: number
+  unit: string
+  active: boolean
+  isLowStock: boolean
 }
 
 export interface SaveProductRequest {
-  code:        string
-  barcode?:    string
-  name:        string
+  code: string
+  barcode?: string
+  name: string
   description?: string
-  imageUrl?:    string
-  categoryId:  number
-  costPrice:   number
-  salePrice:   number
-  stock:       number
-  minStock:    number
-  unit:        string
+  imageUrl?: string
+  categoryId: number
+  costPrice: number
+  salePrice: number
+  stock: number
+  minStock: number
+  unit: string
 }
 
 export const productsApi = {
-  getAll:       (onlyActive?: boolean) =>
+  getAll: (onlyActive?: boolean) =>
     client.get<ApiResponse<Product[]>>('/products', {
-      params: onlyActive !== undefined ? { onlyActive } : {}
+      params: onlyActive !== undefined ? { onlyActive } : {},
     }),
 
-  getById:      (id: number) =>
+  getById: (id: number) =>
     client.get<ApiResponse<Product>>(`/products/${id}`),
 
-  search:       (query: string) =>
-    client.get<ApiResponse<Product[]>>('/products/search', { params: { query } }),
+  search: (query: string) =>
+    client.get<ApiResponse<Product[]>>('/products/search', {
+      params: { query },
+    }),
 
   getByBarcode: (barcode: string) =>
     client.get<ApiResponse<Product>>(`/products/barcode/${barcode}`),
 
-  uploadImage: (id: number, file: File) => {
-    const form = new FormData()
-    form.append('file', file)
-
-    return client.post<ApiResponse<string>>(`/products/${id}/image`, form)
-  },
-
-  getLowStock:  () =>
+  getLowStock: () =>
     client.get<ApiResponse<Product[]>>('/products/low-stock'),
 
-  create:       (data: SaveProductRequest) =>
+  create: (data: SaveProductRequest) =>
     client.post<ApiResponse<Product>>('/products', data),
 
-  update:       (id: number, data: SaveProductRequest) =>
+  update: (id: number, data: SaveProductRequest) =>
     client.put<ApiResponse<Product>>(`/products/${id}`, data),
 
-  activate:     (id: number) =>
-    client.patch(`/products/${id}/activate`),
+  activate: (id: number) =>
+    client.patch<ApiResponse<unknown>>(`/products/${id}/activate`),
 
-  deactivate:   (id: number) =>
-    client.patch(`/products/${id}/deactivate`),
+  deactivate: (id: number) =>
+    client.patch<ApiResponse<unknown>>(`/products/${id}/deactivate`),
+
+  uploadImage: (id: number, file: File) => {
+    const form = new FormData()
+    form.append('file', file, file.name)
+
+    return client.post<ApiResponse<string>>(`/products/${id}/image`,form
+    )
+  },
 }

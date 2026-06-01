@@ -65,40 +65,49 @@ public class ProductsController : ControllerBase
     public async Task<IActionResult> Create([FromBody] SaveProductRequest request)
     {
         var product = await _productService.CreateAsync(request);
-        return CreatedAtAction(nameof(GetById),
+
+        return CreatedAtAction(
+            nameof(GetById),
             new { id = product.Id },
-            ApiResponse<ProductDto>.Ok(product, "Producto creado correctamente."));
+            ApiResponse<ProductDto>.Ok(product, "Producto creado correctamente.")
+        );
     }
+
     // POST /api/products/{id}/image
-    [HttpPost("{id}/image")]
+    [HttpPost("{id:int}/image")]
     [Authorize(Roles = "Admin,Inventario")]
     public async Task<IActionResult> UploadImage(
-        int id, IFormFile file)
+        [FromRoute] int id,
+        [FromForm(Name = "file")] IFormFile file)
     {
         if (file is null || file.Length == 0)
             return BadRequest(ApiResponse.Fail("Archivo inválido."));
 
         var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
-        var ext     = Path.GetExtension(file.FileName).ToLower();
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
         if (!allowed.Contains(ext))
             return BadRequest(ApiResponse.Fail("Solo JPG, PNG o WEBP."));
 
-        var product = await _productService.GetByIdAsync(id);
+        await _productService.GetByIdAsync(id);
 
-        // Guardar archivo
-        var fileName  = $"{id}_{Guid.NewGuid():N}{ext}";
-        var folder    = Path.Combine(
-            Directory.GetCurrentDirectory(), "wwwroot", "images", "products");
+        var fileName = $"{id}_{Guid.NewGuid():N}{ext}";
+        var folder = Path.Combine(
+            Directory.GetCurrentDirectory(),
+            "wwwroot",
+            "images",
+            "products"
+        );
+
         Directory.CreateDirectory(folder);
-        var filePath  = Path.Combine(folder, fileName);
+        var filePath = Path.Combine(folder, fileName);
 
-        using (var stream = System.IO.File.Create(filePath))
+        await using (var stream = System.IO.File.Create(filePath))
+        {
             await file.CopyToAsync(stream);
+        }
 
-        // Guardar URL en producto
         var imageUrl = $"/images/products/{fileName}";
         await _productService.UpdateImageAsync(id, imageUrl);
-
         return Ok(ApiResponse<string>.Ok(imageUrl, "Imagen subida correctamente."));
     }
 

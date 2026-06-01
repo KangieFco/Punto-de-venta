@@ -5,14 +5,12 @@ const client = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// Inyectar token en cada request
 client.interceptors.request.use((config) => {
   const token = localStorage.getItem('pos_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
 
-// Manejo global de errores 401
 client.interceptors.response.use(
   (res) => res,
   (error) => {
