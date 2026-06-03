@@ -62,37 +62,37 @@ export default function UserForm({ user, onClose }: Props) {
       <form onSubmit={handleSubmit(d => mutation.mutate(d))}
             className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-black-700 mb-1">
             Nombre completo <span className="text-red-500">*</span>
           </label>
           <input
             {...register('fullName', { required: 'Requerido' })}
-            className="input" placeholder="Juan Pérez"
+            className="input"
           />
           {errors.fullName && (
-            <p className="text-red-500 text-xs mt-1">
+            <p className="text-red-500 text-sm mt-1">
               {errors.fullName.message}
             </p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-black-700 mb-1">
             Usuario <span className="text-red-500">*</span>
           </label>
           <input
             {...register('username', { required: 'Requerido' })}
-            className="input" placeholder="juanperez"
+            className="input" 
           />
           {errors.username && (
-            <p className="text-red-500 text-xs mt-1">
+            <p className="text-red-500 text-sm mt-1">
               {errors.username.message}
             </p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-black-700 mb-1">
             Contraseña {isEdit && (
               <span className="text-gray-400 font-normal">
                 (vacío = no cambiar)
@@ -108,14 +108,14 @@ export default function UserForm({ user, onClose }: Props) {
             type="password" className="input" placeholder="••••••••"
           />
           {errors.password && (
-            <p className="text-red-500 text-xs mt-1">
+            <p className="text-red-500 text-sm mt-1">
               {errors.password.message}
             </p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-black-700 mb-1">
             Rol <span className="text-red-500">*</span>
           </label>
           <select
@@ -131,7 +131,7 @@ export default function UserForm({ user, onClose }: Props) {
             ))}
           </select>
           {errors.roleId && (
-            <p className="text-red-500 text-xs mt-1">
+            <p className="text-red-500 text-sm mt-1">
               {errors.roleId.message}
             </p>
           )}

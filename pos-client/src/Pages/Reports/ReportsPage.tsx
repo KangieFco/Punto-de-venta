@@ -41,7 +41,7 @@ export default function ReportsPage() {
   return (
     <div className="p-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Reportes</h1>
+        <h1 className="text-2xl font-bold text-black-900">Reportes</h1>
       </div>
 
       {/* Tabs */}
@@ -50,14 +50,9 @@ export default function ReportsPage() {
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium
-                        border-b-2 transition-colors -mb-px
-                        ${tab === key
-                          ? 'border-primary-500 text-primary-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700'
-                        }`}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${tab === key ? 'border-primary-500 text-primary-600' : 'border-transparent text-black-500 hover:text-black-700' }`}
           >
-            <Icon size={16} />
+            <Icon size={20} />
             {label}
           </button>
         ))}
@@ -67,17 +62,17 @@ export default function ReportsPage() {
       {tab === 'daily' && (
         <div className="space-y-6">
           <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-gray-700">Fecha:</label>
+            <label className="text-sm font-medium text-black-700">Fecha:</label>
             <input
               type="date"
               value={date}
               onChange={e => setDate(e.target.value)}
-              className="input max-w-xs"
+              className="input max-w-sm"
             />
           </div>
 
           {loadingDaily ? (
-            <p className="text-gray-400">Cargando...</p>
+            <p className="text-black-400">Cargando...</p>
           ) : daily ? (
             <>
               {/* KPIs */}
@@ -106,7 +101,7 @@ export default function ReportsPage() {
 
               {/* Desglose de métodos */}
               <div className="card">
-                <h3 className="font-semibold text-gray-900 mb-4">
+                <h3 className="font-semibold text-black-900 mb-4">
                   Ingresos por método de pago
                 </h3>
                 <div className="space-y-3">
@@ -120,15 +115,15 @@ export default function ReportsPage() {
                     return (
                       <div key={label}>
                         <div className="flex justify-between text-sm mb-1">
-                          <span className="text-gray-600">{label}</span>
+                          <span className="text-black-600">{label}</span>
                           <span className="font-medium">
                             ${value.toFixed(2)}
-                            <span className="text-gray-400 ml-1 text-xs">
+                            <span className="text-black-400 ml-1 text-sm">
                               ({pct.toFixed(0)}%)
                             </span>
                           </span>
                         </div>
-                        <div className="h-2 bg-gray-100 rounded-full">
+                        <div className="h-2 bg-black-100 rounded-full">
                           <div
                             className="h-2 bg-primary-500 rounded-full transition-all"
                             style={{ width: `${pct}%` }}
@@ -144,37 +139,37 @@ export default function ReportsPage() {
               {daily.topProducts.length > 0 && (
                 <div className="card overflow-hidden p-0">
                   <div className="px-6 py-4 border-b">
-                    <h3 className="font-semibold text-gray-900">
+                    <h3 className="font-semibold text-black-900">
                       Top 5 productos del día
                     </h3>
                   </div>
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 border-b">
                       <tr>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">
+                        <th className="text-left px-4 py-3 font-medium text-black-600">
                           #
                         </th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">
+                        <th className="text-left px-4 py-3 font-medium text-black-600">
                           Producto
                         </th>
-                        <th className="text-right px-4 py-3 font-medium text-gray-600">
+                        <th className="text-right px-4 py-3 font-medium text-black-600">
                           Cantidad
                         </th>
-                        <th className="text-right px-4 py-3 font-medium text-gray-600">
+                        <th className="text-right px-4 py-3 font-medium text-black-600">
                           Ingresos
                         </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {daily.topProducts.map((p, i) => (
-                        <tr key={p.productId} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-gray-400 font-bold">
+                        <tr key={p.productId} className="hover:bg-black-50">
+                          <td className="px-4 py-3 text-black-400 font-bold">
                             #{i + 1}
                           </td>
-                          <td className="px-4 py-3 font-medium text-gray-900">
+                          <td className="px-4 py-3 font-medium text-black-900">
                             {p.productName}
                           </td>
-                          <td className="px-4 py-3 text-right text-gray-700">
+                          <td className="px-4 py-3 text-right text-black-700">
                             {p.totalQuantitySold}
                           </td>
                           <td className="px-4 py-3 text-right font-bold
@@ -197,25 +192,25 @@ export default function ReportsPage() {
         <div className="space-y-6">
           <div className="flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">Desde:</label>
+              <label className="text-sm font-medium text-black-700">Desde:</label>
               <input
                 type="date" value={from}
                 onChange={e => setFrom(e.target.value)}
-                className="input max-w-xs"
+                className="input max-w-sm"
               />
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">Hasta:</label>
+              <label className="text-sm font-medium text-black-700">Hasta:</label>
               <input
                 type="date" value={to}
                 onChange={e => setTo(e.target.value)}
-                className="input max-w-xs"
+                className="input max-w-sm"
               />
             </div>
           </div>
 
           {loadingSales ? (
-            <p className="text-gray-400">Cargando...</p>
+            <p className="text-black-400">Cargando...</p>
           ) : salesReport ? (
             <>
               <div className="grid grid-cols-3 gap-4">
@@ -240,22 +235,22 @@ export default function ReportsPage() {
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50 border-b">
                     <tr>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">
+                      <th className="text-left px-4 py-3 font-medium text-black-600">
                         Folio
                       </th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">
+                      <th className="text-left px-4 py-3 font-medium text-black-600">
                         Cajero
                       </th>
-                      <th className="text-right px-4 py-3 font-medium text-gray-600">
+                      <th className="text-right px-4 py-3 font-medium text-black-600">
                         Total
                       </th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">
+                      <th className="text-left px-4 py-3 font-medium text-black-600">
                         Pago
                       </th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">
+                      <th className="text-left px-4 py-3 font-medium text-black-600">
                         Estado
                       </th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">
+                      <th className="text-left px-4 py-3 font-medium text-black-600">
                         Fecha
                       </th>
                     </tr>
@@ -266,17 +261,17 @@ export default function ReportsPage() {
                         <td className="px-4 py-3 font-mono text-primary-600 font-bold">
                           {s.folio}
                         </td>
-                        <td className="px-4 py-3 text-gray-700">
+                        <td className="px-4 py-3 text-black-700">
                           {s.userFullName}
                         </td>
                         <td className="px-4 py-3 text-right font-bold">
                           ${s.total.toFixed(2)}
                         </td>
-                        <td className="px-4 py-3 text-gray-600">
+                        <td className="px-4 py-3 text-black-600">
                           {s.paymentMethod}
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`text-xs font-medium px-2 py-0.5
+                          <span className={`text-sm font-medium px-2 py-0.5
                             rounded-full
                             ${s.status === 'Completed'
                               ? 'bg-green-100 text-green-700'
@@ -285,7 +280,7 @@ export default function ReportsPage() {
                             {s.status === 'Completed' ? 'Completada' : 'Cancelada'}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                        <td className="px-4 py-3 text-black-500 whitespace-nowrap">
                           {new Date(s.createdAt).toLocaleString('es-MX')}
                         </td>
                       </tr>
@@ -303,40 +298,40 @@ export default function ReportsPage() {
         <div className="space-y-6">
           <div className="flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">Desde:</label>
+              <label className="text-sm font-medium text-black-700">Desde:</label>
               <input
                 type="date" value={from}
                 onChange={e => setFrom(e.target.value)}
-                className="input max-w-xs"
+                className="input max-w-sm"
               />
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">Hasta:</label>
+              <label className="text-sm font-medium text-black-700">Hasta:</label>
               <input
                 type="date" value={to}
                 onChange={e => setTo(e.target.value)}
-                className="input max-w-xs"
+                className="input max-w-sm"
               />
             </div>
           </div>
 
           {loadingTop ? (
-            <p className="text-gray-400">Cargando...</p>
+            <p className="text-black-400">Cargando...</p>
           ) : (
             <div className="card overflow-hidden p-0">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b">
                   <tr>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">
+                    <th className="text-left px-4 py-3 font-medium text-black-600">
                       #
                     </th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">
+                    <th className="text-left px-4 py-3 font-medium text-black-600">
                       Producto
                     </th>
-                    <th className="text-right px-4 py-3 font-medium text-gray-600">
+                    <th className="text-right px-4 py-3 font-medium text-black-600">
                       Unidades vendidas
                     </th>
-                    <th className="text-right px-4 py-3 font-medium text-gray-600">
+                    <th className="text-right px-4 py-3 font-medium text-black-600">
                       Ingresos
                     </th>
                   </tr>
@@ -345,23 +340,22 @@ export default function ReportsPage() {
                   {topProducts?.length === 0 ? (
                     <tr>
                       <td colSpan={4}
-                          className="text-center py-12 text-gray-400">
+                          className="text-center py-12 text-black-400">
                         Sin datos para el período
                       </td>
                     </tr>
                   ) : topProducts?.map((p, i) => (
-                    <tr key={p.productId} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-gray-400 font-bold w-12">
+                    <tr key={p.productId} className="hover:bg-black-50">
+                      <td className="px-4 py-3 text-black-400 font-bold w-12">
                         #{i + 1}
                       </td>
-                      <td className="px-4 py-3 font-medium text-gray-900">
+                      <td className="px-4 py-3 font-medium text-black-900">
                         {p.productName}
                       </td>
-                      <td className="px-4 py-3 text-right text-gray-700 font-medium">
+                      <td className="px-4 py-3 text-right text-black-700 font-medium">
                         {p.totalQuantitySold}
                       </td>
-                      <td className="px-4 py-3 text-right font-bold
-                                     text-primary-600">
+                      <td className="px-4 py-3 text-right font-bold text-primary-600">
                         ${p.totalRevenue.toFixed(2)}
                       </td>
                     </tr>
@@ -391,7 +385,7 @@ function KpiCard({ label, value, color }: {
   }
   return (
     <div className={`rounded-xl border p-5 ${colors[color]}`}>
-      <p className="text-sm text-gray-500">{label}</p>
+      <p className="text-sm text-black-500">{label}</p>
       <p className={`text-2xl font-bold mt-1 ${text[color]}`}>{value}</p>
     </div>
   )

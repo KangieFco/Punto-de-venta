@@ -99,11 +99,11 @@ export default function UsersPage() {
                 </td>
               </tr>
             ) : data?.map(u => (
-              <tr key={u.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 font-medium text-gray-900">
+              <tr key={u.id} className="hover:bg-black-50">
+                <td className="px-6 py-4 font-medium text-black-900">
                   {u.fullName}
                 </td>
-                <td className="px-6 py-4 font-mono text-gray-600">
+                <td className="px-6 py-4 font-mono text-black-600">
                   @{u.username}
                 </td>
                 <td className="px-6 py-4">
@@ -115,7 +115,7 @@ export default function UsersPage() {
                     variant={u.active ? 'green' : 'red'}
                   />
                 </td>
-                <td className="px-6 py-4 text-gray-500">
+                <td className="px-6 py-4 text-black-500">
                   {new Date(u.createdAt).toLocaleDateString('es-MX')}
                 </td>
                 <td className="px-6 py-4">
@@ -124,15 +124,15 @@ export default function UsersPage() {
                       onClick={() => setEditing(u)}
                       className="p-2 hover:bg-gray-100 rounded-lg"
                     >
-                      <Pencil size={16} className="text-gray-500" />
+                      <Pencil size={24} className="text-gray-500" />
                     </button>
                     <button
                       onClick={() => toggleMutation.mutate(u)}
                       className="p-2 hover:bg-gray-100 rounded-lg"
                     >
                       {u.active
-                        ? <ToggleRight size={20} className="text-green-600" />
-                        : <ToggleLeft  size={20} className="text-gray-400" />
+                        ? <ToggleRight size={24} className="text-green-600" />
+                        : <ToggleLeft  size={24} className="text-gray-400" />
                       }
                     </button>
                   </div>
