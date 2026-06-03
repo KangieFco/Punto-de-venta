@@ -9,8 +9,6 @@ import CategoryForm from '../Categories/CategoryForm'
 export default function CategoriesPage() {
   const qc = useQueryClient()
   const [editing, setEditing] = useState<Category | null | undefined>(undefined)
-  // undefined = modal cerrado, null = nuevo, Category = editar
-
   const { data, isLoading } = useQuery({
     queryKey: ['categories'],
     queryFn: () => categoriesApi.getAll().then(r => r.data.data ?? []),
@@ -61,24 +59,24 @@ export default function CategoriesPage() {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {isLoading ? (
-              <tr><td colSpan={5} className="text-center py-12 text-gray-400">
+              <tr><td colSpan={5} className="text-center py-12 text-black-400">
                 Cargando...
               </td></tr>
             ) : data?.length === 0 ? (
-              <tr><td colSpan={5} className="text-center py-12 text-gray-400">
+              <tr><td colSpan={5} className="text-center py-12 text-black-400">
                 No hay categorías
               </td></tr>
             ) : data?.map(cat => (
-              <tr key={cat.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 font-medium text-gray-900">{cat.name}</td>
-                <td className="px-6 py-4 text-gray-500">{cat.description ?? '—'}</td>
-                <td className="px-6 py-4">
+              <tr key={cat.id} className="hover:bg-black-50">
+                <td className="px-6 py-4 font-medium text-black-900">{cat.name}</td>
+                <td className="px-6 py-4 text-black-500">{cat.description ?? '—'}</td>
+                <td className="px-8 py-6">
                   <Badge
                     label={cat.active ? 'Activa' : 'Inactiva'}
                     variant={cat.active ? 'green' : 'red'}
                   />
                 </td>
-                <td className="px-6 py-4 text-gray-500">
+                <td className="px-6 py-4 text-black-500">
                   {new Date(cat.createdAt).toLocaleDateString('es-MX')}
                 </td>
                 <td className="px-6 py-4">
@@ -88,7 +86,7 @@ export default function CategoriesPage() {
                       className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                       title="Editar"
                     >
-                      <Pencil size={16} className="text-gray-500" />
+                      <Pencil size={20} className="text-gray-500" />
                     </button>
                     <button
                       onClick={() => toggleMutation.mutate(cat)}
@@ -96,8 +94,8 @@ export default function CategoriesPage() {
                       title={cat.active ? 'Desactivar' : 'Activar'}
                     >
                       {cat.active
-                        ? <ToggleRight size={20} className="text-green-600" />
-                        : <ToggleLeft  size={20} className="text-gray-400" />
+                        ? <ToggleRight size={24} className="text-green-600" />
+                        : <ToggleLeft  size={24} className="text-gray-400" />
                       }
                     </button>
                   </div>

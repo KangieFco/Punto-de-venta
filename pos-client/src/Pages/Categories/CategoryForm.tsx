@@ -48,7 +48,6 @@ export default function CategoryForm({ category, onClose }: Props) {
           <input
             {...register('name', { required: 'El nombre es requerido' })}
             className="input"
-            placeholder="Ej: Bebidas"
             autoFocus
           />
           {errors.name && (
