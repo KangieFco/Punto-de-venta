@@ -2,77 +2,109 @@ import { create } from 'zustand'
 import type { Product } from '../api/products'
 
 export interface CartItem {
-  product:  Product
+  product: Product
   quantity: number
   discount: number
   subtotal: number
 }
 
 interface CartState {
-  items:       CartItem[]
-  addItem:     (product: Product) => void
-  removeItem:  (productId: number) => void
-  updateQty:   (productId: number, qty: number) => void
-  updateDisc:  (productId: number, disc: number) => void
-  clearCart:   () => void
-  total:       number
-  subtotal:    number
+  items: CartItem[]
+  globalDiscount: number
+  subtotal: number
+  totalDiscount: number 
+  total: number
+  addItem: (product: Product) => void
+  removeItem: (productId: number) => void
+  updateQty: (productId: number, qty: number) => void
+  updateDiscount: (productId: number, disc: number) => void
+  setGlobalDiscount: (disc: number) => void
+  clearCart: () => void
 }
 
-const calcSubtotal = (item: CartItem) =>
-  (item.product.salePrice - item.discount) * item.quantity
+const itemSub = (price: number, disc: number, qty: number) =>
+  Math.max(0, (price - disc) * qty)
+
+const totals = (items: CartItem[], globalDiscount: number) => {
+  const sub = items.reduce((acc, i) => acc + i.subtotal, 0)
+  return {
+    subtotal:      sub,
+    totalDiscount: items.reduce((acc, i) => acc + i.discount * i.quantity, 0) + globalDiscount,
+    total: Math.max(0, sub - globalDiscount),
+  }
+}
 
 export const useCartStore = create<CartState>((set, get) => ({
   items: [],
-
+  globalDiscount: 0,
+  subtotal:       0,
+  totalDiscount:  0,
+  total:          0,
   addItem: (product) => {
-    const { items } = get()
-    const existing  = items.find(i => i.product.id === product.id)
+    const { items, globalDiscount } = get()
+    const idx = items.findIndex(i => i.product.id === product.id)
 
-    if (existing) {
-      set({
-        items: items.map(i =>
-          i.product.id === product.id
-            ? { ...i, quantity: i.quantity + 1,
-                subtotal: calcSubtotal({ ...i, quantity: i.quantity + 1 }) }
-            : i
-        )
+    let next: CartItem[]
+
+    if (idx >= 0) {
+      next = items.map((i, n) => {
+        if (n !== idx) return i
+        const qty = i.quantity + 1
+        return { ...i, quantity: qty, subtotal: itemSub(i.product.salePrice, i.discount, qty) }
       })
     } else {
-      const item: CartItem = {
-        product, quantity: 1, discount: 0,
-        subtotal: product.salePrice
-      }
-      set({ items: [...items, item] })
+      next = [ ...items, {
+          product,
+          quantity: 1,
+          discount: 0,
+          subtotal: product.salePrice,
+      }]
     }
+
+    set({ items: next, ...totals(next, globalDiscount) })
   },
 
-  removeItem: (productId) =>
-    set({ items: get().items.filter(i => i.product.id !== productId) }),
+  removeItem: (productId) => {
+    const { globalDiscount } = get()
+    const next = get().items.filter(i => i.product.id !== productId)
+    set({ items: next, ...totals(next, globalDiscount) })
+  },
 
   updateQty: (productId, qty) => {
     if (qty < 1) return
-    set({
-      items: get().items.map(i =>
-        i.product.id === productId
-          ? { ...i, quantity: qty, subtotal: calcSubtotal({ ...i, quantity: qty }) }
-          : i
-      )
-    })
+    const { globalDiscount } = get()
+    const next = get().items.map(i =>
+      i.product.id !== productId
+        ? i
+        : { ...i, quantity: qty, subtotal: itemSub(i.product.salePrice, i.discount, qty) }
+    )
+    set({ items: next, ...totals(next, globalDiscount) })
   },
 
-  updateDisc: (productId, disc) => {
-    set({
-      items: get().items.map(i =>
-        i.product.id === productId
-          ? { ...i, discount: disc, subtotal: calcSubtotal({ ...i, discount: disc }) }
-          : i
-      )
-    })
+  updateDiscount: (productId, disc) => {
+    const { globalDiscount } = get()
+    const d    = Math.max(0, disc)
+    const next = get().items.map(i =>
+      i.product.id !== productId
+        ? i
+        : { ...i, discount: d, subtotal: itemSub(i.product.salePrice, d, i.quantity) }
+    )
+    set({ items: next, ...totals(next, globalDiscount) })
   },
 
-  clearCart: () => set({ items: [] }),
+  setGlobalDiscount: (disc) => {
+    const { items } = get()
+    const d = Math.max(0, disc)
+    set({ globalDiscount: d, ...totals(items, d) })
+  },
 
-  get total()    { return get().items.reduce((s,i) => s + i.subtotal, 0) },
-  get subtotal() { return get().items.reduce((s,i) => s + i.subtotal, 0) },
+
+clearCart: () =>
+    set({
+      items:          [],
+      globalDiscount: 0,
+      subtotal:       0,
+      totalDiscount:  0,
+      total:          0,
+    }),
 }))
