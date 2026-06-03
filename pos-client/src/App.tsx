@@ -15,6 +15,7 @@ import SalesPage     from './Pages/Sales/SalesPage'
 import UsersPage     from './Pages/Users/UsersPage'
 import ReportsPage   from './Pages/Reports/ReportsPage'
 import ClearToastsOnRouteChange from '../src/components/ClearToastOnRouteChange'
+import LayawaysPage from '../src/Pages/Layaways/LayawaysPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -115,6 +116,12 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+
+            <Route path="/layaways" element={
+              <ProtectedRoute roles={['Admin','Cajero','Supervisor','Almacen']}>
+                <LayawaysPage />
+              </ProtectedRoute>
+            }/>
           </Route>
 
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

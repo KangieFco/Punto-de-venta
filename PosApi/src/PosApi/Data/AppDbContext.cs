@@ -17,22 +17,23 @@ public class AppDbContext : DbContext
     public DbSet<CashRegister> CashRegisters => Set<CashRegister>();
     public DbSet<CashMovement> CashMovements => Set<CashMovement>();
     public DbSet<Ticket> Tickets => Set<Ticket>();
+    public DbSet<Layaway> Layaways => Set<Layaway>();
+    public DbSet<LayawayPayment> LayawayPayments => Set<LayawayPayment>();
+    public DbSet<LayawayDetail> LayawayDetails => Set<LayawayDetail>();
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
+    protected override void OnModelCreating(ModelBuilder modelBuilder) {
         base.OnModelCreating(modelBuilder);
 
         // ── Roles ─────────────────────────────────────────────
-        modelBuilder.Entity<Role>(e =>
-        {
+        modelBuilder.Entity<Role>(e => {
             e.HasKey(r => r.Id);
             e.Property(r => r.Name).IsRequired().HasMaxLength(50);
             e.HasIndex(r => r.Name).IsUnique();
+            
         });
 
         // ── Users ─────────────────────────────────────────────
-        modelBuilder.Entity<User>(e =>
-        {
+        modelBuilder.Entity<User>(e => {
             e.HasKey(u => u.Id);
             e.Property(u => u.FullName).IsRequired().HasMaxLength(120);
             e.Property(u => u.Username).IsRequired().HasMaxLength(60);
@@ -46,15 +47,13 @@ public class AppDbContext : DbContext
         });
 
         // ── Categories ────────────────────────────────────────
-        modelBuilder.Entity<Category>(e =>
-        {
+        modelBuilder.Entity<Category>(e => {
             e.HasKey(c => c.Id);
             e.Property(c => c.Name).IsRequired().HasMaxLength(100);
         });
 
         // ── Products ──────────────────────────────────────────
-        modelBuilder.Entity<Product>(e =>
-        {
+        modelBuilder.Entity<Product>(e => {
             e.HasKey(p => p.Id);
             e.Property(p => p.Code).IsRequired().HasMaxLength(50);
             e.Property(p => p.Barcode).HasMaxLength(100);
@@ -72,8 +71,7 @@ public class AppDbContext : DbContext
         });
 
         // ── Sales ─────────────────────────────────────────────
-        modelBuilder.Entity<Sale>(e =>
-        {
+        modelBuilder.Entity<Sale>(e => {
             e.HasKey(s => s.Id);
             e.Property(s => s.Folio).IsRequired().HasMaxLength(20);
             e.Property(s => s.Subtotal).HasColumnType("decimal(18,2)");
@@ -89,7 +87,6 @@ public class AppDbContext : DbContext
              .HasForeignKey(s => s.UserId)
              .OnDelete(DeleteBehavior.Restrict);
 
-            // Self-ref para cancelación — sin cascade
             e.HasOne(s => s.CancelledByUser)
              .WithMany()
              .HasForeignKey(s => s.CancelledByUserId)
@@ -102,8 +99,7 @@ public class AppDbContext : DbContext
         });
 
         // ── SaleDetails ───────────────────────────────────────
-        modelBuilder.Entity<SaleDetail>(e =>
-        {
+        modelBuilder.Entity<SaleDetail>(e => {
             e.HasKey(sd => sd.Id);
             e.Property(sd => sd.UnitPrice).HasColumnType("decimal(18,2)");
             e.Property(sd => sd.Discount).HasColumnType("decimal(18,2)");
@@ -121,8 +117,7 @@ public class AppDbContext : DbContext
         });
 
         // ── InventoryMovements ────────────────────────────────
-        modelBuilder.Entity<InventoryMovement>(e =>
-        {
+        modelBuilder.Entity<InventoryMovement>(e => {
             e.HasKey(im => im.Id);
             e.Property(im => im.Reason).HasMaxLength(200);
             e.Property(im => im.Reference).HasMaxLength(50);
@@ -139,8 +134,7 @@ public class AppDbContext : DbContext
         });
 
         // ── CashRegisters ─────────────────────────────────────
-        modelBuilder.Entity<CashRegister>(e =>
-        {
+        modelBuilder.Entity<CashRegister>(e => {
             e.HasKey(cr => cr.Id);
             e.Property(cr => cr.OpeningAmount).HasColumnType("decimal(18,2)");
             e.Property(cr => cr.ClosingAmount).HasColumnType("decimal(18,2)");
@@ -154,8 +148,7 @@ public class AppDbContext : DbContext
         });
 
         // ── CashMovements ─────────────────────────────────────
-        modelBuilder.Entity<CashMovement>(e =>
-        {
+        modelBuilder.Entity<CashMovement>(e => {
             e.HasKey(cm => cm.Id);
             e.Property(cm => cm.Amount).HasColumnType("decimal(18,2)");
             e.Property(cm => cm.Reason).HasMaxLength(200);
@@ -172,8 +165,7 @@ public class AppDbContext : DbContext
         });
 
         // ── Tickets ───────────────────────────────────────────
-        modelBuilder.Entity<Ticket>(e =>
-        {
+        modelBuilder.Entity<Ticket>(e =>{
             e.HasKey(t => t.Id);
             e.Property(t => t.Folio).IsRequired().HasMaxLength(20);
 
@@ -181,6 +173,60 @@ public class AppDbContext : DbContext
              .WithOne(s => s.Ticket)
              .HasForeignKey<Ticket>(t => t.SaleId)
              .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── Apartados ───────────────────────────────────────────
+        modelBuilder.Entity<Layaway>(e => {
+            e.HasKey(l => l.Id);
+            e.Property(l => l.Folio).IsRequired().HasMaxLength(20);
+            e.Property(l => l.ClientName).IsRequired().HasMaxLength(120);
+            e.Property(l => l.ClientPhone).HasMaxLength(20);
+            e.Property(l => l.Total).HasColumnType("decimal(18,2)");
+            e.Property(l => l.Deposit).HasColumnType("decimal(18,2)");
+            e.Property(l => l.Remaining).HasColumnType("decimal(18,2)");
+            e.HasIndex(l => l.Folio).IsUnique();
+
+            e.HasOne(l => l.User)
+            .WithMany()
+            .HasForeignKey(l => l.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+            // Relación con venta generada (nullable)
+            e.HasOne(l => l.Sale)
+            .WithMany()
+            .HasForeignKey(l => l.SaleId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .IsRequired(false);
+        });
+
+        modelBuilder.Entity<LayawayDetail>(e => {
+            e.HasKey(ld => ld.Id);
+            e.Property(ld => ld.UnitPrice).HasColumnType("decimal(18,2)");
+            e.Property(ld => ld.Subtotal).HasColumnType("decimal(18,2)");
+            e.HasOne(ld => ld.Layaway)
+            .WithMany(l => l.Details)
+            .HasForeignKey(ld => ld.LayawayId)
+            .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(ld => ld.Product)
+            .WithMany()
+            .HasForeignKey(ld => ld.ProductId)
+            .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<LayawayPayment>(e => {
+            e.HasKey(lp => lp.Id);
+            e.Property(lp => lp.Amount).HasColumnType("decimal(18,2)");
+            e.Property(lp => lp.Notes).HasMaxLength(200);
+
+            e.HasOne(lp => lp.Layaway)
+            .WithMany(l => l.Payments)
+            .HasForeignKey(lp => lp.LayawayId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(lp => lp.User)
+            .WithMany()
+            .HasForeignKey(lp => lp.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }
