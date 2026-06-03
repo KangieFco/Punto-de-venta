@@ -50,10 +50,9 @@ export default function ProductForm({ product, onClose }: Props) {
       ? mapProductToDefaults(product)
       : {
           unit: 'PZA',
-          stock: 0,
-          minStock: 0,
-          costPrice: 0,
-          salePrice: 0,
+          stock: undefined,
+          minStock: undefined,
+          salePrice: undefined,
         },
   })
 

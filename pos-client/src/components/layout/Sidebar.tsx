@@ -2,6 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { ShoppingCart, Package, LayoutDashboard, Users, BarChart2, DollarSign, LogOut, AlertTriangle, Tag } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { authApi } from '../../api/auth'
+import { Archive } from 'lucide-react'
 import { usePermissions } from '../../hooks/usePermissions'
 
 const navItems = [
@@ -14,6 +15,7 @@ const navItems = [
   { to: '/sales',      label: 'Ventas',      icon: BarChart2,       roles: ['Admin','Supervisor'] },
   { to: '/users',      label: 'Usuarios',    icon: Users,           roles: ['Admin'] },
   { to: '/reports',    label: 'Reportes',    icon: BarChart2,       roles: ['Admin','Supervisor'] },
+  { to: '/layaways',   label: 'Apartados',   icon: Archive,         roles: ['Admin','Supervisor','Cajero','Almacen']  }
 ]
 
 export default function Sidebar() {
