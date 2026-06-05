@@ -2,54 +2,60 @@ import client from './client'
 import type { ApiResponse } from '../types/api'
 
 export interface SaleDetail {
-  productId:   number
+  productId: number
   productName: string
-  quantity:    number
-  unitPrice:   number
-  discount:    number
-  subtotal:    number
+  quantity: number
+  unitPrice: number
+  discount: number
+  subtotal: number
+}
+
+export interface PaymentBreakdown {
+  method: string
+  amount: number
 }
 
 export interface Sale {
-  id:             number
-  folio:          string
-  userId:         number
-  userFullName:   string
+  id: number
+  folio: string
+  userId: number
+  userFullName: string
   cashRegisterId: number
-  subtotal:       number
-  discount:       number
-  tax:            number
-  total:          number
-  paymentMethod:  string
+  subtotal: number
+  discount: number
+  tax: number
+  total: number
+  paymentMethod: string
   amountReceived: number
-  changeAmount:   number
-  status:         string
-  createdAt:      string
-  details:        SaleDetail[]
+  changeAmount: number
+  status: string
+  createdAt: string
+  details: SaleDetail[]
+  paymentBreakdown: PaymentBreakdown[]
 }
 
 export interface CreateSaleRequest {
   items: { productId: number; quantity: number; discount: number }[]
-  paymentMethod:  number
+  paymentMethod: number
   amountReceived: number
-  discount:       number
+  discount: number
   cashRegisterId: number
-  exchangeRate?:  number
+  exchangeRate?: number
 }
 
 export const salesApi = {
-  getAll:     () =>
+  getAll: () =>
     client.get<ApiResponse<Sale[]>>('/sales'),
 
-  getById:    (id: number) =>
+  getById: (id: number) =>
     client.get<ApiResponse<Sale>>(`/sales/${id}`),
 
   getByFolio: (folio: string) =>
     client.get<ApiResponse<Sale>>(`/sales/folio/${folio}`),
 
-  create:     (data: CreateSaleRequest) =>
+  create: (data: CreateSaleRequest) =>
     client.post<ApiResponse<Sale>>('/sales', data),
 
-  cancel:     (id: number, reason: string) =>
+  cancel: (id: number, reason: string) =>
     client.post(`/sales/${id}/cancel`, { reason }),
 }
