@@ -8,6 +8,49 @@ import { useAuthStore } from '../../store/authStore'
 import Badge from '../../components/ui/Badge'
 import Modal from '../../components/ui/Modal'
 
+type PaymentBreakdownItem = {
+  method: string
+  amount: number
+}
+
+const paymentLabels: Record<string, string> = {
+  Cash: '💵 Efectivo',
+  Card: '💳 Tarjeta',
+  Dollar: '🇺🇸 Dólares',
+  Other: '🔄 Otro',
+  Mixed: '🔀 Pago mixto',
+}
+
+function formatPaymentMethod(method: string) {
+  return paymentLabels[method] ?? method
+}
+
+function parsePaymentBreakdown(value: any): PaymentBreakdownItem[] {
+  if (!value) return []
+
+  if (Array.isArray(value)) {
+    return value.map(p => ({
+      method: p.method,
+      amount: Number(p.amount) || 0,
+    }))
+  }
+
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map(part => {
+        const [method, amount] = part.split(':')
+        return {
+          method: method?.trim(),
+          amount: Number(amount) || 0,
+        }
+      })
+      .filter(p => p.method && p.amount > 0)
+  }
+
+  return []
+}
+
 export default function SalesPage() {
   const qc = useQueryClient()
   const { user } = useAuthStore()
@@ -37,17 +80,13 @@ export default function SalesPage() {
 
   return (
     <div className="p-8">
-      {/* Encabezado */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Ventas
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900">Ventas</h1>
         <p className="text-gray-500 text-base mt-1">
           {sales?.length ?? 0} ventas registradas
         </p>
       </div>
 
-      {/* Tabla */}
       <div className="card overflow-hidden p-0">
         <div className="overflow-x-auto">
           <table className="w-full table-fixed text-base">
@@ -63,24 +102,12 @@ export default function SalesPage() {
 
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="text-left px-8 py-4 font-semibold text-gray-600">
-                  Folio
-                </th>
-                <th className="text-left px-8 py-4 font-semibold text-gray-600">
-                  Cajero
-                </th>
-                <th className="text-right px-8 py-4 font-semibold text-gray-600">
-                  Total
-                </th>
-                <th className="text-left px-8 py-4 font-semibold text-gray-600">
-                  Pago
-                </th>
-                <th className="text-left px-8 py-4 font-semibold text-gray-600">
-                  Estado
-                </th>
-                <th className="text-left px-8 py-4 font-semibold text-gray-600">
-                  Fecha
-                </th>
+                <th className="text-left px-8 py-4 font-semibold text-gray-600">Folio</th>
+                <th className="text-left px-8 py-4 font-semibold text-gray-600">Cajero</th>
+                <th className="text-right px-8 py-4 font-semibold text-gray-600">Total</th>
+                <th className="text-left px-8 py-4 font-semibold text-gray-600">Pago</th>
+                <th className="text-left px-8 py-4 font-semibold text-gray-600">Estado</th>
+                <th className="text-left px-8 py-4 font-semibold text-gray-600">Fecha</th>
                 <th className="px-8 py-4" />
               </tr>
             </thead>
@@ -88,51 +115,38 @@ export default function SalesPage() {
             <tbody className="divide-y divide-gray-100">
               {isLoading ? (
                 <tr>
-                  <td
-                    colSpan={7}
-                    className="text-center py-12 text-gray-400 text-lg"
-                  >
+                  <td colSpan={7} className="text-center py-12 text-gray-400 text-lg">
                     Cargando...
                   </td>
                 </tr>
               ) : sales?.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={7}
-                    className="text-center py-12 text-gray-400 text-lg"
-                  >
+                  <td colSpan={7} className="text-center py-12 text-gray-400 text-lg">
                     Sin ventas
                   </td>
                 </tr>
               ) : (
                 sales?.map(s => (
-                  <tr key={s.id} className="hover:bg-black-50">
+                  <tr key={s.id} className="hover:bg-gray-50">
                     <td className="px-8 py-6 font-mono font-bold text-primary-600 text-base">
                       {s.folio}
                     </td>
-                    <td className="px-8 py-6 text-black-700 font-medium">
+
+                    <td className="px-8 py-6 text-gray-700 font-medium">
                       {s.userFullName}
                     </td>
-                    <td className="px-8 py-6 text-right font-bold text-black-900">
+
+                    <td className="px-8 py-6 text-right font-bold text-gray-900">
                       ${s.total.toFixed(2)}
                     </td>
-                    <td className="px-8 py-6 text-black-700">
-                      <span>
-                        {{
-                          Cash: '💵 Efectivo',
-                          Card: '💳 Tarjeta',
-                          Other: '🔄 Otro',
-                        }[s.paymentMethod] ?? s.paymentMethod}
-                      </span>
+
+                    <td className="px-8 py-6 text-gray-700">
+                      {formatPaymentMethod(s.paymentMethod)}
                     </td>
 
                     <td className="px-8 py-6">
                       <Badge
-                        label={
-                          s.status === 'Completed'
-                            ? 'Completada'
-                            : 'Cancelada'
-                        }
+                        label={s.status === 'Completed' ? 'Completada' : 'Cancelada'}
                         variant={s.status === 'Completed' ? 'green' : 'red'}
                       />
                     </td>
@@ -170,15 +184,10 @@ export default function SalesPage() {
         </div>
       </div>
 
-      {/* Modal detalle */}
       {detail && (
-        <SaleDetailModal
-          sale={detail}
-          onClose={() => setDetail(null)}
-        />
+        <SaleDetailModal sale={detail} onClose={() => setDetail(null)} />
       )}
 
-      {/* Modal cancelar */}
       {cancelling && (
         <CancelSaleDialog
           sale={cancelling}
@@ -200,16 +209,15 @@ function SaleDetailModal({
   sale: Sale
   onClose: () => void
 }) {
+  const breakdown = parsePaymentBreakdown((sale as any).paymentBreakdown)
+
   return (
     <Modal title={`Venta ${sale.folio}`} onClose={onClose} size="lg">
       <div className="space-y-4">
-        {/* Info general */}
         <div className="grid grid-cols-2 gap-4 text-base">
           <div>
             <span className="text-gray-500">Cajero:</span>
-            <span className="ml-2 font-medium">
-              {sale.userFullName}
-            </span>
+            <span className="ml-2 font-medium">{sale.userFullName}</span>
           </div>
 
           <div>
@@ -222,43 +230,54 @@ function SaleDetailModal({
           <div>
             <span className="text-gray-500">Pago:</span>
             <span className="ml-2 font-medium">
-              {{
-                Cash: 'Efectivo',
-                Card: 'Tarjeta',
-                Other: 'Otro',
-              }[sale.paymentMethod] ?? sale.paymentMethod}
+              {formatPaymentMethod(sale.paymentMethod)}
             </span>
           </div>
 
           <div>
             <span className="text-gray-500 mr-2">Estado:</span>
             <Badge
-              label={
-                sale.status === 'Completed'
-                  ? 'Completada'
-                  : 'Cancelada'
-              }
+              label={sale.status === 'Completed' ? 'Completada' : 'Cancelada'}
               variant={sale.status === 'Completed' ? 'green' : 'red'}
             />
           </div>
+
+          {breakdown.length > 0 && (
+            <div className="col-span-2">
+              <p className="text-gray-500 text-sm mb-2">Desglose de pago:</p>
+
+              <div className="flex gap-3 flex-wrap">
+                {breakdown.map((p, i) => (
+                  <div
+                    key={i}
+                    className="bg-gray-50 border rounded-xl px-4 py-2 text-sm"
+                  >
+                    <span className="text-gray-500">
+                      {formatPaymentMethod(p.method)}
+                    </span>
+
+                    <span className="font-bold text-gray-900 ml-2">
+                      ${p.amount.toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Productos */}
         <table className="w-full text-base border rounded-xl overflow-hidden">
           <thead className="bg-gray-50">
             <tr>
               <th className="text-left px-4 py-3 font-semibold text-gray-600">
                 Producto
               </th>
-
               <th className="text-right px-4 py-3 font-semibold text-gray-600">
                 Cant.
               </th>
-
               <th className="text-right px-4 py-3 font-semibold text-gray-600">
                 P. Unit.
               </th>
-
               <th className="text-right px-4 py-3 font-semibold text-gray-600">
                 Subtotal
               </th>
@@ -268,18 +287,11 @@ function SaleDetailModal({
           <tbody className="divide-y divide-gray-100">
             {sale.details.map((d, i) => (
               <tr key={i}>
-                <td className="px-4 py-3">
-                  {d.productName}
-                </td>
-
-                <td className="px-4 py-3 text-right">
-                  {d.quantity}
-                </td>
-
+                <td className="px-4 py-3">{d.productName}</td>
+                <td className="px-4 py-3 text-right">{d.quantity}</td>
                 <td className="px-4 py-3 text-right">
                   ${d.unitPrice.toFixed(2)}
                 </td>
-
                 <td className="px-4 py-3 text-right font-medium">
                   ${d.subtotal.toFixed(2)}
                 </td>
@@ -288,7 +300,6 @@ function SaleDetailModal({
           </tbody>
         </table>
 
-        {/* Totales */}
         <div className="space-y-2 text-base border-t pt-4">
           <div className="flex justify-between text-gray-600">
             <span>Subtotal</span>
@@ -348,8 +359,7 @@ function CancelSaleDialog({
         className="space-y-4"
       >
         <p className="text-base text-gray-600">
-          ¿Cancelar la venta <strong>{sale.folio}</strong>?
-          Se revertirá el inventario.
+          ¿Cancelar la venta <strong>{sale.folio}</strong>? Se revertirá el inventario.
         </p>
 
         <div>
@@ -374,19 +384,11 @@ function CancelSaleDialog({
         </div>
 
         <div className="flex gap-3 justify-end">
-          <button
-            type="button"
-            onClick={onClose}
-            className="btn-secondary"
-          >
+          <button type="button" onClick={onClose} className="btn-secondary">
             No cancelar
           </button>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-danger"
-          >
+          <button type="submit" disabled={loading} className="btn-danger">
             {loading ? 'Cancelando...' : 'Sí, cancelar'}
           </button>
         </div>
