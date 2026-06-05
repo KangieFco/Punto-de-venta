@@ -81,24 +81,24 @@ public class CashRegisterService : ICashRegisterService
         var mixedSales = completedSales
             .Where(s => s.PaymentMethod == PaymentMethod.Mixed && !string.IsNullOrEmpty(s.PaymentBreakdown)).ToList();
 
-        foreach (var ms in mixedSales) {
-            var parts = ms.PaymentBreakdown!.Split(',', StringSplitOptions.RemoveEmptyEntries);
+        foreach (var ms in mixedSales){
+            if (string.IsNullOrWhiteSpace(ms.PaymentBreakdown)) continue;
+            foreach (var part in ms.PaymentBreakdown.Split(',')) {
+                var lastColon = part.LastIndexOf(':');
+                if (lastColon <= 0) continue;
+                var methodStr = part[..lastColon].Trim();
+                var amountStr = part[(lastColon + 1)..].Trim();
+                if (!Enum.TryParse<PaymentMethod>(methodStr, out var method)) continue;
+                if (!decimal.TryParse(
+                        amountStr,
+                        System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        out var amount)) continue;
 
-            foreach (var part in parts) {
-                var kv = part.Split(':', StringSplitOptions.RemoveEmptyEntries);
-                if (kv.Length != 2) continue;
-                if (!Enum.TryParse<PaymentMethod>(kv[0], true, out var method))
-                    continue;
-                if (!decimal.TryParse(kv[1], out var amount))
-                    continue;
-                if (method == PaymentMethod.Cash)
-                    cashSales += amount;
-                else if (method == PaymentMethod.Card)
-                    cardSales += amount;
-                else if (method == PaymentMethod.Dollar)
-                    dollarSales += amount;
-                else
-                    otherSales += amount;
+                if (method == PaymentMethod.Cash) cashSales += amount;
+                else if (method == PaymentMethod.Card) cardSales += amount;
+                else if (method == PaymentMethod.Dollar) dollarSales += amount;
+                else otherSales += amount;
             }
         }
 
