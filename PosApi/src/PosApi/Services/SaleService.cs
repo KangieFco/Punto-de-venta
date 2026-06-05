@@ -247,33 +247,46 @@ public class SaleService : ISaleService
         return $"{prefix}{next:D4}";
     }
 
-    private static SaleDto ToDto(Sale s) => new()
-    {
-        Id = s.Id,
-        Folio = s.Folio,
-        UserId = s.UserId,
-        UserFullName = s.User != null ? s.User.FullName : "",
-        CashRegisterId = s.CashRegisterId,
-        Subtotal = s.Subtotal,
-        Discount = s.Discount,
-        Tax = s.Tax,
-        Total = s.Total,
-        PaymentMethod = s.PaymentMethod.ToString(),
-        AmountReceived = s.AmountReceived,
-        ChangeAmount = s.ChangeAmount,
-        ExchangeRate = s.ExchangeRate,
-        Status = s.Status.ToString(),
-        CreatedAt = s.CreatedAt,
+    private static SaleDto ToDto(Sale s) {
+        var breakdown = new List<PaymentBreakdownDto>();
+        if (!string.IsNullOrEmpty(s.PaymentBreakdown)) {
+            breakdown = s.PaymentBreakdown.Split(',')
+                .Select(part => {
+                    var kv = part.Split(':');
+                    return new PaymentBreakdownDto {
+                        Method = kv[0],
+                        Amount = decimal.Parse(kv[1])
+                    };
+                })
+                .ToList();
+        }
 
-        Details = s.SaleDetails.Select(d => new SaleDetailDto
-        {
-            ProductId = d.ProductId,
-            ProductName = d.Product != null ? d.Product.Name : "",
-            ImageUrl = d.Product != null ? d.Product.ImageUrl : null,
-            Quantity = d.Quantity,
-            UnitPrice = d.UnitPrice,
-            Discount = d.Discount,
-            Subtotal = d.Subtotal
-        }).ToList()
-    };
+        return new SaleDto {
+            Id = s.Id,
+            Folio = s.Folio,
+            UserId = s.UserId,
+            UserFullName = s.User.FullName,
+            CashRegisterId = s.CashRegisterId,
+            Subtotal = s.Subtotal,
+            Discount = s.Discount,
+            Tax = s.Tax,
+            Total = s.Total,
+            PaymentMethod = s.PaymentMethod.ToString(),
+            PaymentBreakdown = breakdown,
+            AmountReceived = s.AmountReceived,
+            ChangeAmount = s.ChangeAmount,
+            ExchangeRate = s.ExchangeRate,
+            Status = s.Status.ToString(),
+            CreatedAt = s.CreatedAt,
+            Details = s.SaleDetails.Select(d => new SaleDetailDto {
+                ProductId = d.ProductId,
+                ProductName = d.Product.Name,
+                ImageUrl = d.Product.ImageUrl,
+                Quantity = d.Quantity,
+                UnitPrice = d.UnitPrice,
+                Discount = d.Discount,
+                Subtotal = d.Subtotal
+            }).ToList()
+        };
+    }
 }

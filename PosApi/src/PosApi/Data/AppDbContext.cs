@@ -1,12 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using PosApi.Domain.Entities;
-
 namespace PosApi.Data;
 
 public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
+    public DbSet<LayawayPayment> LayawayPayments => Set<LayawayPayment>();
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<User> Users => Set<User>();
     public DbSet<Category> Categories => Set<Category>();
@@ -18,7 +17,6 @@ public class AppDbContext : DbContext
     public DbSet<CashMovement> CashMovements => Set<CashMovement>();
     public DbSet<Ticket> Tickets => Set<Ticket>();
     public DbSet<Layaway> Layaways => Set<Layaway>();
-    public DbSet<LayawayPayment> LayawayPayments => Set<LayawayPayment>();
     public DbSet<LayawayDetail> LayawayDetails => Set<LayawayDetail>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
@@ -140,7 +138,6 @@ public class AppDbContext : DbContext
             e.Property(cr => cr.ClosingAmount).HasColumnType("decimal(18,2)");
             e.Property(cr => cr.ExpectedAmount).HasColumnType("decimal(18,2)");
             e.Property(cr => cr.Difference).HasColumnType("decimal(18,2)");
-
             e.HasOne(cr => cr.User)
              .WithMany(u => u.CashRegisters)
              .HasForeignKey(cr => cr.UserId)
@@ -152,12 +149,10 @@ public class AppDbContext : DbContext
             e.HasKey(cm => cm.Id);
             e.Property(cm => cm.Amount).HasColumnType("decimal(18,2)");
             e.Property(cm => cm.Reason).HasMaxLength(200);
-
             e.HasOne(cm => cm.CashRegister)
              .WithMany(cr => cr.CashMovements)
              .HasForeignKey(cm => cm.CashRegisterId)
              .OnDelete(DeleteBehavior.Restrict);
-
             e.HasOne(cm => cm.User)
              .WithMany(u => u.CashMovements)
              .HasForeignKey(cm => cm.UserId)
@@ -184,6 +179,7 @@ public class AppDbContext : DbContext
             e.Property(l => l.Total).HasColumnType("decimal(18,2)");
             e.Property(l => l.Deposit).HasColumnType("decimal(18,2)");
             e.Property(l => l.Remaining).HasColumnType("decimal(18,2)");
+            e.Property(l => l.ExpiresAt).IsRequired();
             e.HasIndex(l => l.Folio).IsUnique();
 
             e.HasOne(l => l.User)
@@ -191,7 +187,6 @@ public class AppDbContext : DbContext
             .HasForeignKey(l => l.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
-            // Relación con venta generada (nullable)
             e.HasOne(l => l.Sale)
             .WithMany()
             .HasForeignKey(l => l.SaleId)

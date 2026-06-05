@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using PosApi.Common;
 using PosApi.DTOs.CashRegisters;
 using PosApi.Services.Interfaces;
-
 namespace PosApi.Controllers;
 
 [ApiController]
@@ -14,8 +13,7 @@ public class CashRegistersController : ControllerBase
     private readonly ICashRegisterService _cashService;
     private readonly ICurrentUserService  _currentUser;
 
-    public CashRegistersController(ICashRegisterService cashService,
-                                    ICurrentUserService currentUser)
+    public CashRegistersController(ICashRegisterService cashService, ICurrentUserService currentUser)
     {
         _cashService = cashService;
         _currentUser = currentUser;
@@ -32,12 +30,12 @@ public class CashRegistersController : ControllerBase
 
     // POST /api/cash-registers/{id}/close
     [HttpPost("{id}/close")]
-    [Authorize(Roles = "Admin,Inventario,Cajero")]
+    [Authorize(Roles = "Admin,Cajero,Supervisor")]
     public async Task<IActionResult> Close(int id,
         [FromBody] CloseCashRegisterRequest request)
     {
         var result = await _cashService.CloseAsync(id, request, _currentUser.UserId);
-        return Ok(ApiResponse<CashRegisterDto>.Ok(result, "Caja cerrada correctamente."));
+        return Ok(ApiResponse<CashRegisterCloseResultDto>.Ok( result, "Caja cerrada correctamente."));
     }
 
     // GET /api/cash-registers/current
@@ -51,7 +49,7 @@ public class CashRegistersController : ControllerBase
 
     // GET /api/cash-registers
     [HttpGet]
-    [Authorize(Roles = "Admin,Supervisor")]
+    [Authorize(Roles = "Admin, Cajero, Supervisor")]
     public async Task<IActionResult> GetAll()
     {
         var result = await _cashService.GetAllAsync();
