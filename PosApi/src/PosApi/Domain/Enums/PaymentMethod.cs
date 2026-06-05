@@ -5,5 +5,6 @@ public enum PaymentMethod
     Cash = 1,
     Card = 2,
     Other  = 3,
-    Dollar = 4
+    Dollar = 4,
+    Mixed = 5
 }

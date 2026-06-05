@@ -92,10 +92,10 @@ export default function InventoryPage() {
                 <th className="text-left px-4 py-4 font-bold text-black">
                   Categoría
                 </th>
-                <th className="text-right px-4 py-4 font-bold text-black">
+                <th className="text-center px-4 py-4 font-bold text-black">
                   Stock
                 </th>
-                <th className="text-right px-4 py-4 font-bold text-black">
+                <th className="text-center px-4 py-4 font-bold text-black">
                   Mínimo
                 </th>
                 <th className="text-left px-4 py-4 font-bold text-black">
@@ -118,12 +118,12 @@ export default function InventoryPage() {
                   <td className="px-4 py-4 text-base font-small text-black">
                     {p.categoryName}
                   </td>
-                  <td className="px-8 py-6 text-right font-small text-black">
+                  <td className="px-8 py-6 text-center font-small text-black">
                     <span className={p.isLowStock ? 'text-red-600' : 'text-black'}>
                       {p.stock} {p.unit}
                     </span>
                   </td>
-                  <td className="px-4 py-4 text-right text-base font-small text-black">
+                  <td className="px-4 py-4 text-center text-base font-small text-black">
                     {p.minStock}
                   </td>
 
@@ -167,13 +167,13 @@ export default function InventoryPage() {
                 <th className="text-left px-4 py-4 font-bold text-black">
                   Tipo
                 </th>
-                <th className="text-right px-4 py-4 font-bold text-black">
+                <th className="text-center px-4 py-4 font-bold text-black">
                   Cantidad
                 </th>
-                <th className="text-right px-4 py-4 font-bold text-black">
+                <th className="text-center px-4 py-4 font-bold text-black">
                   Antes
                 </th>
-                <th className="text-right px-4 py-4 font-bold text-black">
+                <th className="text-center px-4 py-4 font-bold text-black">
                   Después
                 </th>
                 <th className="text-left px-4 py-4 font-bold text-black">
@@ -212,13 +212,13 @@ export default function InventoryPage() {
                     <td className="px-4 py-4">
                       <Badge label={label} variant={variant} />
                     </td>
-                    <td className="px-8 py-6 text-black-700 font-small">
+                    <td className="px-8 py-6 text-center text-black-700 font-small">
                       {m.quantity}
                     </td>
-                    <td className="px-8 py-6 text-black-700 font-small">
+                    <td className="px-8 py-6 text-center text-black-700 font-small">
                       {m.previousStock}
                     </td>
-                    <td className="px-8 py-6 text-black-700 font-small">
+                    <td className="px-8 py-6 text-center text-black-700 font-small">
                       {m.newStock}
                     </td>
                     <td className="px-8 py-6 text-black-700 font-small">

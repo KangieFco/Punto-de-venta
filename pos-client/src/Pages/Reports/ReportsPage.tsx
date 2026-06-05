@@ -138,7 +138,7 @@ export default function ReportsPage() {
               {/* Top 5 productos del día */}
               {daily.topProducts.length > 0 && (
                 <div className="card overflow-hidden p-0">
-                  <div className="px-6 py-4 border-b">
+                  <div className="px-10 py-6 border-b">
                     <h3 className="font-semibold text-black-900">
                       Top 5 productos del día
                     </h3>
@@ -146,16 +146,16 @@ export default function ReportsPage() {
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 border-b">
                       <tr>
-                        <th className="text-left px-4 py-3 font-medium text-black-600">
+                        <th className="text-left px-8 py-6 font-medium text-black-600">
                           #
                         </th>
-                        <th className="text-left px-4 py-3 font-medium text-black-600">
+                        <th className="text-left px-8 py-6 font-medium text-black-600">
                           Producto
                         </th>
-                        <th className="text-right px-4 py-3 font-medium text-black-600">
+                        <th className="text-right px-8 py-6 font-medium text-black-600">
                           Cantidad
                         </th>
-                        <th className="text-right px-4 py-3 font-medium text-black-600">
+                        <th className="text-right px-8 py-6 font-medium text-black-600">
                           Ingresos
                         </th>
                       </tr>
@@ -163,17 +163,16 @@ export default function ReportsPage() {
                     <tbody className="divide-y divide-gray-100">
                       {daily.topProducts.map((p, i) => (
                         <tr key={p.productId} className="hover:bg-black-50">
-                          <td className="px-4 py-3 text-black-400 font-bold">
+                          <td className="px-8 py-6 text-black-400 font-bold">
                             #{i + 1}
                           </td>
-                          <td className="px-4 py-3 font-medium text-black-900">
+                          <td className="px-8 py-6 font-medium text-black-900">
                             {p.productName}
                           </td>
-                          <td className="px-4 py-3 text-right text-black-700">
+                          <td className="px-8 py-6 text-right text-black-700">
                             {p.totalQuantitySold}
                           </td>
-                          <td className="px-4 py-3 text-right font-bold
-                                         text-primary-600">
+                          <td className="px-8 py-6 text-right font-bold text-primary-600">
                             ${p.totalRevenue.toFixed(2)}
                           </td>
                         </tr>
@@ -235,22 +234,22 @@ export default function ReportsPage() {
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50 border-b">
                     <tr>
-                      <th className="text-left px-4 py-3 font-medium text-black-600">
+                      <th className="text-left px-8 py-6 font-medium text-black-600">
                         Folio
                       </th>
-                      <th className="text-left px-4 py-3 font-medium text-black-600">
+                      <th className="text-left px-8 py-6 font-medium text-black-600">
                         Cajero
                       </th>
-                      <th className="text-right px-4 py-3 font-medium text-black-600">
+                      <th className="text-right px-8 py-6 font-medium text-black-600">
                         Total
                       </th>
-                      <th className="text-left px-4 py-3 font-medium text-black-600">
+                      <th className="text-left px-8 py-6 font-medium text-black-600">
                         Pago
                       </th>
-                      <th className="text-left px-4 py-3 font-medium text-black-600">
+                      <th className="text-left px-8 py-6 font-medium text-black-600">
                         Estado
                       </th>
-                      <th className="text-left px-4 py-3 font-medium text-black-600">
+                      <th className="text-left px-8 py-6 font-medium text-black-600">
                         Fecha
                       </th>
                     </tr>
@@ -258,19 +257,19 @@ export default function ReportsPage() {
                   <tbody className="divide-y divide-gray-100">
                     {salesReport.sales.map((s, i) => (
                       <tr key={i} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 font-mono text-primary-600 font-bold">
+                        <td className="px-8 py-6 font-mono text-primary-600 font-bold">
                           {s.folio}
                         </td>
-                        <td className="px-4 py-3 text-black-700">
+                        <td className="px-8 py-6 text-black-700">
                           {s.userFullName}
                         </td>
-                        <td className="px-4 py-3 text-right font-bold">
+                        <td className="px-8 py-6 text-right font-bold">
                           ${s.total.toFixed(2)}
                         </td>
-                        <td className="px-4 py-3 text-black-600">
+                        <td className="px-8 py-6 text-black-600">
                           {s.paymentMethod}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-8 py-6">
                           <span className={`text-sm font-medium px-2 py-0.5
                             rounded-full
                             ${s.status === 'Completed'
@@ -280,7 +279,7 @@ export default function ReportsPage() {
                             {s.status === 'Completed' ? 'Completada' : 'Cancelada'}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-black-500 whitespace-nowrap">
+                        <td className="px-8 py-6 text-black-500 whitespace-nowrap">
                           {new Date(s.createdAt).toLocaleString('es-MX')}
                         </td>
                       </tr>
@@ -346,16 +345,16 @@ export default function ReportsPage() {
                     </tr>
                   ) : topProducts?.map((p, i) => (
                     <tr key={p.productId} className="hover:bg-black-50">
-                      <td className="px-4 py-3 text-black-400 font-bold w-12">
+                      <td className="px-8 py-6 text-black-400 font-bold w-12">
                         #{i + 1}
                       </td>
-                      <td className="px-4 py-3 font-medium text-black-900">
+                      <td className="px-8 py-6 font-medium text-black-900">
                         {p.productName}
                       </td>
-                      <td className="px-4 py-3 text-right text-black-700 font-medium">
+                      <td className="px-8 py-6 text-right text-black-700 font-medium">
                         {p.totalQuantitySold}
                       </td>
-                      <td className="px-4 py-3 text-right font-bold text-primary-600">
+                      <td className="px-8 py-6 text-right font-bold text-primary-600">
                         ${p.totalRevenue.toFixed(2)}
                       </td>
                     </tr>
