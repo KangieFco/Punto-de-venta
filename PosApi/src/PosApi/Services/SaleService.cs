@@ -249,16 +249,25 @@ public class SaleService : ISaleService
 
     private static SaleDto ToDto(Sale s) {
         var breakdown = new List<PaymentBreakdownDto>();
-        if (!string.IsNullOrEmpty(s.PaymentBreakdown)) {
-            breakdown = s.PaymentBreakdown.Split(',')
-                .Select(part => {
-                    var kv = part.Split(':');
-                    return new PaymentBreakdownDto {
-                        Method = kv[0],
-                        Amount = decimal.Parse(kv[1])
-                    };
-                })
-                .ToList();
+        if (!string.IsNullOrWhiteSpace(s.PaymentBreakdown))
+        {
+            foreach (var part in s.PaymentBreakdown.Split(','))
+            {
+                var lastColon = part.LastIndexOf(':');
+                if (lastColon <= 0) continue;
+                var method = part[..lastColon].Trim();
+                var amountStr = part[(lastColon + 1)..].Trim();
+                if (decimal.TryParse(
+                        amountStr,
+                        System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        out var amount)) {
+                    breakdown.Add(new PaymentBreakdownDto{
+                        Method = method,
+                        Amount = amount
+                    });
+                }
+            }
         }
 
         return new SaleDto {

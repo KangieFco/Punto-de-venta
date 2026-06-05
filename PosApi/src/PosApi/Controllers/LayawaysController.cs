@@ -298,7 +298,16 @@ public class LayawaysController : ControllerBase
         var breakdown = paymentGroups
             .Select(g => $"{g.Method}:{g.Amount:F2}")
             .ToList();
-        var breakdownJson = string.Join(",", breakdown);
+        var breakdownJson = string.Join(",",
+            paymentGroups.Select(g =>
+                string.Format(
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    "{0}:{1:F2}",
+                    g.Method,
+                    g.Amount
+                )
+            )
+        );
 
         // Folio
         var prefix    = $"VTA-{DateTimeHelper.Now:yyyyMMdd}-";
