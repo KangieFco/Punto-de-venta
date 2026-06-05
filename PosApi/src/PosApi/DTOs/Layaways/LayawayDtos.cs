@@ -43,6 +43,9 @@ public class LayawayDto{
     public string UserFullName { get; set; } = string.Empty;
     public int? SaleId { get; set; }
     public string? SaleFolio { get; set; }
+    public DateTime ExpiresAt { get; set; }
+    public int DaysLeft { get; set; }
+    public bool IsExpired { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? CompletedAt { get; set; }
     public List<LayawayDetailDto>  Details  { get; set; } = new();

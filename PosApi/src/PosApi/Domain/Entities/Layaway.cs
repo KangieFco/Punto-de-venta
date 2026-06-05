@@ -12,6 +12,7 @@ public class Layaway{
     public string Status { get; set; } = "Pending";
     public int UserId { get; set; }
     public int? SaleId { get; set; }
+    public DateTime ExpiresAt { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? CompletedAt{ get; set; }
