@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { Eye, XCircle } from 'lucide-react'
@@ -12,6 +12,10 @@ type PaymentBreakdownItem = {
   method: string
   amount: number
 }
+
+type PeriodFilter = 'day' | 'week' | 'all'
+
+const SALES_PER_PAGE = 10
 
 const paymentLabels: Record<string, string> = {
   Cash: '💵 Efectivo',
@@ -58,11 +62,63 @@ export default function SalesPage() {
 
   const [detail, setDetail] = useState<Sale | null>(null)
   const [cancelling, setCancelling] = useState<Sale | null>(null)
+  const [search, setSearch] = useState('')
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('day')
+  const [page, setPage] = useState(1)
 
   const { data: sales, isLoading } = useQuery({
     queryKey: ['sales'],
     queryFn: () => salesApi.getAll().then(r => r.data.data ?? []),
   })
+
+  const filteredSales = useMemo(() => {
+    const today = new Date()
+
+    return (sales ?? [])
+      .filter(s => {
+        const term = search.toLowerCase().trim()
+
+        if (term) {
+          const matchesSearch =
+            s.folio.toLowerCase().includes(term) ||
+            s.userFullName.toLowerCase().includes(term) ||
+            s.paymentMethod.toLowerCase().includes(term) ||
+            s.status.toLowerCase().includes(term)
+
+          if (!matchesSearch) return false
+        }
+
+        const saleDate = new Date(s.createdAt)
+
+        if (periodFilter === 'day') {
+          return saleDate.toDateString() === today.toDateString()
+        }
+
+        if (periodFilter === 'week') {
+          const startOfWeek = new Date(today)
+          startOfWeek.setDate(today.getDate() - today.getDay())
+          startOfWeek.setHours(0, 0, 0, 0)
+
+          const endOfWeek = new Date(startOfWeek)
+          endOfWeek.setDate(startOfWeek.getDate() + 7)
+
+          return saleDate >= startOfWeek && saleDate < endOfWeek
+        }
+
+        return true
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+  }, [sales, search, periodFilter])
+
+  const totalPages = Math.max(1, Math.ceil(filteredSales.length / SALES_PER_PAGE))
+
+  const paginatedSales = filteredSales.slice(
+    (page - 1) * SALES_PER_PAGE,
+    page * SALES_PER_PAGE
+  )
 
   const cancelMutation = useMutation({
     mutationFn: ({ id, reason }: { id: number; reason: string }) =>
@@ -83,8 +139,33 @@ export default function SalesPage() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Ventas</h1>
         <p className="text-gray-500 text-base mt-1">
-          {sales?.length ?? 0} ventas registradas
+          {filteredSales.length} de {sales?.length ?? 0} ventas registradas
         </p>
+      </div>
+
+      <div className="mb-4 flex flex-wrap gap-3 items-center">
+        <input
+          className="input max-w-sm text-base font-medium"
+          placeholder="Buscar por folio, cajero, pago o estado..."
+          value={search}
+          onChange={e => {
+            setSearch(e.target.value)
+            setPage(1)
+          }}
+        />
+
+        <select
+          className="input max-w-xs text-base font-medium"
+          value={periodFilter}
+          onChange={e => {
+            setPeriodFilter(e.target.value as PeriodFilter)
+            setPage(1)
+          }}
+        >
+          <option value="day">Ventas de hoy</option>
+          <option value="week">Ventas de esta semana</option>
+          <option value="all">Todas las ventas</option>
+        </select>
       </div>
 
       <div className="card overflow-hidden p-0">
@@ -119,14 +200,14 @@ export default function SalesPage() {
                     Cargando...
                   </td>
                 </tr>
-              ) : sales?.length === 0 ? (
+              ) : filteredSales.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="text-center py-12 text-gray-400 text-lg">
                     Sin ventas
                   </td>
                 </tr>
               ) : (
-                sales?.map(s => (
+                paginatedSales.map(s => (
                   <tr key={s.id} className="hover:bg-gray-50">
                     <td className="px-8 py-6 font-mono font-bold text-primary-600 text-base">
                       {s.folio}
@@ -182,6 +263,36 @@ export default function SalesPage() {
             </tbody>
           </table>
         </div>
+
+        {filteredSales.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-t">
+            <p className="text-sm text-gray-600">
+              Mostrando {paginatedSales.length} de {filteredSales.length} ventas
+            </p>
+
+            <div className="flex items-center gap-2">
+              <button
+                className="btn-secondary px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={page === 1}
+                onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+              >
+                Anterior
+              </button>
+
+              <span className="text-sm font-semibold text-gray-700">
+                Página {page} de {totalPages}
+              </span>
+
+              <button
+                className="btn-secondary px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={page === totalPages}
+                onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {detail && (

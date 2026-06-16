@@ -25,11 +25,13 @@ export default function ProductsPage() {
     queryFn: () => productsApi.getAll().then(r => r.data.data ?? []),
   })
 
-  const filtered = data?.filter(p =>
+  const filtered = (data ?? [])
+  .filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
     p.code.toLowerCase().includes(search.toLowerCase()) ||
     p.barcode?.includes(search)
-  ) ?? []
+  )
+  .sort((a, b) => Number(a.code) - Number(b.code))
 
   const toggleMutation = useMutation({
     mutationFn: (p: Product) =>
