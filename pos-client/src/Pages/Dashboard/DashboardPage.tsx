@@ -1,37 +1,20 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  AlertTriangle,
-  Banknote,
-  BarChart3,
-  Box,
-  Clock,
-  CreditCard,
-  DollarSign,
-  Package,
-  ShoppingCart,
-} from 'lucide-react'
-
+import { AlertTriangle, BarChart3, Box, CreditCard, DollarSign, Package, ShoppingCart } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { salesApi, type Sale } from '../../api/sales'
 import { productsApi, type Product } from '../../api/products'
 import { cashRegistersApi, type CashRegister } from '../../api/cashRegisters'
 import { layawaysApi, type Layaway } from '../../api/layaways'
-import { inventoryApi, type InventoryMovement } from '../../api/inventory'
-import {
-  SalesLast7DaysChart,
-  PaymentMethodsChart,
-  TopProductsChart,
-} from '../../components/dashboard/SalesLast7DaysChart'
+import { inventoryApi } from '../../api/inventory'
+import { SalesLast7DaysChart, PaymentMethodsChart, TopProductsChart } from '../../components/dashboard/SalesLast7DaysChart'
 
 export default function DashboardPage() {
   const { user } = useAuthStore()
-
   const [sales, setSales] = useState<Sale[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [cashRegister, setCashRegister] = useState<CashRegister | null>(null)
   const [layaways, setLayaways] = useState<Layaway[]>([])
-  const [movements, setMovements] = useState<InventoryMovement[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -46,7 +29,7 @@ export default function DashboardPage() {
     try {
       setLoading(true)
 
-      const [salesRes, productsRes, cashRes, layawaysRes, movementsRes] =
+      const [salesRes, productsRes, cashRes, layawaysRes] =
         await Promise.all([
           salesApi.getAll(),
           productsApi.getAll(true),
@@ -59,7 +42,6 @@ export default function DashboardPage() {
       setProducts(getData<Product[]>(productsRes))
       setCashRegister(getData<CashRegister | null>(cashRes))
       setLayaways(getData<Layaway[]>(layawaysRes))
-      setMovements(getData<InventoryMovement[]>(movementsRes))
     } finally {
       setLoading(false)
     }
@@ -241,23 +223,6 @@ export default function DashboardPage() {
     l => toNumber(l.daysLeft) === 0 && isActiveLayaway(l.status)
   )
 
-  const recentActivity = [
-    ...sales.slice(0, 5).map(s => ({
-      date: s.createdAt,
-      title: `Venta ${s.folio}`,
-      description: `${formatCurrency(s.total)} · ${s.paymentMethod}`,
-      type: 'sale',
-    })),
-    ...movements.slice(0, 5).map((m: any) => ({
-      date: m.createdAt,
-      title: `${movementLabel(m.movementType)} de inventario`,
-      description: `${m.productName ?? 'Producto'} · ${m.quantity} pza(s)`,
-      type: 'inventory',
-    })),
-  ]
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 6)
-
   const alerts = [
     !cashRegister ? 'Caja sin abrir' : null,
     lowStockProducts.length > 0
@@ -329,9 +294,7 @@ export default function DashboardPage() {
           value={cashRegister ? 'Abierta' : 'Cerrada'}
           subtitle={
             cashRegister
-              ? `Apertura: ${formatCurrency(
-                  (cashRegister as any).openingAmount ?? 0
-                )}`
+              ? `Apertura: ${formatCurrency( (cashRegister as any).openingAmount ?? 0 )}`
               : 'Abre caja para vender'
           }
           icon={<DollarSign className="text-yellow-600" size={24} />}
@@ -426,29 +389,8 @@ export default function DashboardPage() {
               </Link>
             </div>
           )}
-        </SectionCard>
-
-        <SectionCard title="Actividad reciente" icon={<Clock size={20} />}>
-          {recentActivity.length === 0 ? (
-            <EmptyText text="Aún no hay movimientos recientes." />
-          ) : (
-            <div className="space-y-3">
-              {recentActivity.map((item, index) => (
-                <div key={index} className="border-b pb-2">
-                  <p className="font-medium text-gray-900">{item.title}</p>
-                  <p className="text-sm text-gray-500">{item.description}</p>
-                  <p className="text-xs text-gray-400">
-                    {formatDateTime(item.date)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-        </SectionCard>
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <SectionCard title="Resumen rápido" icon={<BarChart3 size={20} />}>
+        </SectionCard>  
+          <SectionCard title="Resumen rápido" icon={<BarChart3 size={20} />}>
           <div className="grid grid-cols-2 gap-4">
             <MiniMetric
               label="Ventas realizadas"
@@ -466,20 +408,6 @@ export default function DashboardPage() {
               label="Apartados activos"
               value={String(activeLayaways.length)}
             />
-          </div>
-        </SectionCard>
-
-        <SectionCard title="Atajos" icon={<Banknote size={20} />}>
-          <div className="grid grid-cols-2 gap-3">
-            <QuickLink to="/pos" label="Nueva venta" />
-            <QuickLink
-              to="/cash-registers"
-              label={cashRegister ? 'Ver caja' : 'Abrir caja'}
-            />
-            <QuickLink to="/products" label="Productos" />
-            <QuickLink to="/inventory" label="Inventario" />
-            <QuickLink to="/sales" label="Ventas" />
-            <QuickLink to="/layaways" label="Apartados" />
           </div>
         </SectionCard>
       </div>
@@ -561,17 +489,6 @@ function MiniMetric({ label, value }: { label: string; value: string }) {
   )
 }
 
-function QuickLink({ to, label }: { to: string; label: string }) {
-  return (
-    <Link
-      to={to}
-      className="bg-gray-900 text-white text-center rounded-xl py-3 font-medium hover:bg-gray-800 transition"
-    >
-      {label}
-    </Link>
-  )
-}
-
 function EmptyText({ text }: { text: string }) {
   return <p className="text-sm text-gray-500">{text}</p>
 }
@@ -586,23 +503,4 @@ function formatCurrency(value: unknown) {
     style: 'currency',
     currency: 'MXN',
   })
-}
-
-function formatDateTime(date: string) {
-  return new Date(date).toLocaleString('es-MX', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-function movementLabel(type: string) {
-  const value = type?.toLowerCase() ?? ''
-
-  if (value.includes('entry') || value.includes('entrada')) return 'Entrada'
-  if (value.includes('output') || value.includes('salida')) return 'Salida'
-  if (value.includes('adjustment') || value.includes('ajuste')) return 'Ajuste'
-
-  return type
 }
