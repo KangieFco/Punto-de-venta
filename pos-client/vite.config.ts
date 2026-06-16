@@ -11,11 +11,16 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    host: '0.0.0.0',
+    port: 5175,
+    allowedHosts: [
+      'endorsed-integral-ala-roses.trycloudflare.com',
+    ],
     proxy: {
       '/api': {
         target: 'http://localhost:5227',
         changeOrigin: true,
+        secure: false,
       },
       '/images': {
         target: 'http://localhost:5227',
