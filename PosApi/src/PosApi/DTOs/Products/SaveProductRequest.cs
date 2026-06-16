@@ -1,13 +1,8 @@
 using System.ComponentModel.DataAnnotations;
-
 namespace PosApi.DTOs.Products;
 
-public class SaveProductRequest
-{
-    [Required, MaxLength(50)]
-    public string Code { get; set; } = string.Empty;
-
-    [MaxLength(100)]
+public class SaveProductRequest{
+    [MaxLength(150)]
     public string? Barcode { get; set; }
 
     [Required, MaxLength(150)]

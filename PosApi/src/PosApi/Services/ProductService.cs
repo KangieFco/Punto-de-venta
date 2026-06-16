@@ -75,44 +75,38 @@ public class ProductService : IProductService
     public async Task<ProductDto> CreateAsync(SaveProductRequest request)
     {
 
-        if (await _db.Products.AnyAsync(p => p.Code == request.Code.Trim()))
-            throw new BusinessException($"El código '{request.Code}' ya está en uso.");
         if (!string.IsNullOrWhiteSpace(request.Barcode) &&
-            await _db.Products.AnyAsync(p => p.Barcode == request.Barcode.Trim()))
-            throw new BusinessException($"El código de barras '{request.Barcode}' ya está en uso.");
+        await _db.Products.AnyAsync(p => p.Barcode == request.Barcode.Trim())) throw new BusinessException( $"El código de barras '{request.Barcode}' ya está en uso.");
 
-        if (!await _db.Categories.AnyAsync(c => c.Id == request.CategoryId && c.Active))
-            throw new NotFoundException("Categoría", request.CategoryId);
+        if (!await _db.Categories.AnyAsync(c => c.Id == request.CategoryId && c.Active)) throw new NotFoundException("Categoría", request.CategoryId);
 
-        var product = new Product
-        {
-            Code        = request.Code.Trim().ToUpper(),
-            Barcode     = request.Barcode?.Trim(),
-            Name        = request.Name.Trim(),
+        var product = new Product{
+            Code = "TEMP",
+            Barcode = request.Barcode?.Trim(),
+            Name = request.Name.Trim(),
             Description = request.Description?.Trim(),
-            CategoryId  = request.CategoryId,
-            CostPrice   = request.CostPrice,
-            SalePrice   = request.SalePrice,
-            Stock       = request.Stock,
-            MinStock    = request.MinStock,
-            Unit        = request.Unit.Trim().ToUpper(),
-            Active      = true,
-            CreatedAt   = DateTime.UtcNow,
-            UpdatedAt   = DateTime.UtcNow
+            CategoryId = request.CategoryId,
+            CostPrice = request.CostPrice,
+            SalePrice = request.SalePrice,
+            Stock = request.Stock,
+            MinStock = request.MinStock,
+            Unit = request.Unit.Trim().ToUpper(),
+            Active = true,
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
         };
 
         _db.Products.Add(product);
         await _db.SaveChangesAsync();
+        product.Code = product.Id.ToString("D3");
+        product.UpdatedAt = DateTime.Now;
+        await _db.SaveChangesAsync();
         return await GetByIdAsync(product.Id);
     }
 
-    public async Task<ProductDto> UpdateAsync(int id, SaveProductRequest request)
-    {
+    public async Task<ProductDto> UpdateAsync(int id, SaveProductRequest request){
         var product = await _db.Products.FindAsync(id)
             ?? throw new NotFoundException("Producto", id);
-
-        if (await _db.Products.AnyAsync(p => p.Code == request.Code.Trim() && p.Id != id))
-            throw new BusinessException($"El código '{request.Code}' ya está en uso.");
 
         if (!string.IsNullOrWhiteSpace(request.Barcode) &&
             await _db.Products.AnyAsync(p => p.Barcode == request.Barcode.Trim() && p.Id != id))
@@ -121,65 +115,57 @@ public class ProductService : IProductService
         if (!await _db.Categories.AnyAsync(c => c.Id == request.CategoryId && c.Active))
             throw new NotFoundException("Categoría", request.CategoryId);
 
-        product.Code        = request.Code.Trim().ToUpper();
-        product.Barcode     = request.Barcode?.Trim();
-        product.Name        = request.Name.Trim();
+        product.Barcode = request.Barcode?.Trim();
+        product.Name = request.Name.Trim();
         product.Description = request.Description?.Trim();
-        product.CategoryId  = request.CategoryId;
-        product.CostPrice   = request.CostPrice;
-        product.SalePrice   = request.SalePrice;
-        product.Stock       = request.Stock;
-        product.MinStock    = request.MinStock;
-        product.Unit        = request.Unit.Trim().ToUpper();
-        product.UpdatedAt   = DateTime.UtcNow;
+        product.CategoryId = request.CategoryId;
+        product.CostPrice = request.CostPrice;
+        product.SalePrice = request.SalePrice;
+        product.Stock = request.Stock;
+        product.MinStock = request.MinStock;
+        product.Unit = request.Unit.Trim().ToUpper();
+        product.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
         return await GetByIdAsync(product.Id);
     }
 
-    public async Task ActivateAsync(int id)
-    {
-        var product = await _db.Products.FindAsync(id)
-            ?? throw new NotFoundException("Producto", id);
+    public async Task ActivateAsync(int id){
+        var product = await _db.Products.FindAsync(id) ?? throw new NotFoundException("Producto", id);
 
-        product.Active    = true;
+        product.Active = true;
         product.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
     }
 
-    public async Task UpdateImageAsync(int id, string imageUrl)
-    {
-        var product = await _db.Products.FindAsync(id)
-            ?? throw new NotFoundException("Producto", id);
+    public async Task UpdateImageAsync(int id, string imageUrl){
+        var product = await _db.Products.FindAsync(id) ?? throw new NotFoundException("Producto", id);
 
         product.ImageUrl  = imageUrl;
         product.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
     }
-    public async Task DeactivateAsync(int id)
-    {
-        var product = await _db.Products.FindAsync(id)
-            ?? throw new NotFoundException("Producto", id);
-
-        product.Active    = false;
+    public async Task DeactivateAsync(int id){
+        var product = await _db.Products.FindAsync(id) ?? throw new NotFoundException("Producto", id);
+        product.Active = false;
         product.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
     }
 
     private static ProductDto ToDto(Product p) => new()
     {
-        Id           = p.Id,
-        Code         = p.Code,
-        Barcode      = p.Barcode,
-        Name         = p.Name,
-        Description  = p.Description,
-        CategoryId   = p.CategoryId,
+        Id = p.Id,
+        Code = p.Code,
+        Barcode = p.Barcode,
+        Name = p.Name,
+        Description = p.Description,
+        CategoryId = p.CategoryId,
         CategoryName = p.Category.Name,
-        ImageUrl     = p.ImageUrl,
-        SalePrice    = p.SalePrice,
-        Stock        = p.Stock,
-        MinStock     = p.MinStock,
-        Unit         = p.Unit,
-        Active       = p.Active
+        ImageUrl = p.ImageUrl,
+        SalePrice = p.SalePrice,
+        Stock = p.Stock,
+        MinStock = p.MinStock,
+        Unit = p.Unit,
+        Active = p.Active
     };
 }

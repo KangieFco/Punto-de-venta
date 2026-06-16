@@ -2,17 +2,17 @@ import client from './client'
 import type { ApiResponse } from '../types/api'
 
 export interface InventoryMovement {
-  id:            number
-  productId:     number
-  productName:   string
-  movementType:  string
-  quantity:      number
+  id: number
+  productId: number
+  productName: string
+  movementType: string
+  quantity: number
   previousStock: number
-  newStock:      number
-  reason:        string | null
-  reference:     string | null
-  userFullName:  string
-  createdAt:     string
+  newStock: number
+  reason: string | null
+  reference: string | null
+  userFullName: string
+  createdAt: string
 }
 
 export const inventoryApi = {
@@ -21,12 +21,12 @@ export const inventoryApi = {
       params: productId ? { productId } : {}
     }),
 
-  entry:          (data: { productId: number; quantity: number; reason?: string }) =>
+  entry: (data: { productId: number; quantity: number; reason?: string }) =>
     client.post('/inventory/entry', data),
 
-  output:         (data: { productId: number; quantity: number; reason?: string }) =>
+  output: (data: { productId: number; quantity: number; reason?: string }) =>
     client.post('/inventory/output', data),
 
-  adjustment:     (data: { productId: number; newStock: number; reason?: string }) =>
+  adjustment: (data: { productId: number; newStock: number; reason?: string }) =>
     client.post('/inventory/adjustment', data),
 }
