@@ -6,22 +6,22 @@ import { Archive } from 'lucide-react'
 import { usePermissions } from '../../hooks/usePermissions'
 
 const navItems = [
-  { to: '/dashboard',  label: 'Dashboard',  icon: LayoutDashboard, roles: ['Admin','Supervisor','Cajero','Inventario'] },
-  { to: '/pos',        label: 'Punto de Venta', icon: ShoppingCart, roles: ['Admin','Supervisor','Cajero'] },
-  { to: '/products',   label: 'Productos',   icon: Package,         roles: ['Admin','Inventario','Supervisor'] },
-  { to: '/categories', label: 'Categorías',  icon: Tag,             roles: ['Admin','Inventario'] },
-  { to: '/inventory',  label: 'Inventario',  icon: AlertTriangle,   roles: ['Admin','Inventario','Supervisor'] },
-  { to: '/cash',       label: 'Caja',        icon: DollarSign,      roles: ['Admin','Cajero','Supervisor'] },
-  { to: '/sales',      label: 'Ventas',      icon: BarChart2,       roles: ['Admin','Supervisor'] },
-  { to: '/users',      label: 'Usuarios',    icon: Users,           roles: ['Admin'] },
-  { to: '/reports',    label: 'Reportes',    icon: BarChart2,       roles: ['Admin','Supervisor'] },
-  { to: '/layaways',   label: 'Apartados',   icon: Archive,         roles: ['Admin','Supervisor','Cajero','Almacen']  }
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['Admin','Supervisor','Cajero','Inventario'] },
+  { to: '/pos', label: 'Punto de Venta', icon: ShoppingCart, roles: ['Admin','Supervisor','Cajero'] },
+  { to: '/products', label: 'Productos', icon: Package, roles: ['Admin','Inventario','Supervisor'] },
+  { to: '/categories', label: 'Categorías', icon: Tag, roles: ['Admin','Inventario'] },
+  { to: '/inventory', label: 'Inventario', icon: AlertTriangle,   roles: ['Admin','Inventario','Supervisor'] },
+  { to: '/cash', label: 'Caja', icon: DollarSign, roles: ['Admin','Cajero','Supervisor'] },
+  { to: '/sales', label: 'Ventas', icon: BarChart2, roles: ['Admin','Supervisor'] },
+  { to: '/users', label: 'Usuarios', icon: Users, roles: ['Admin'] },
+  { to: '/reports', label: 'Reportes', icon: BarChart2, roles: ['Admin','Supervisor'] },
+  { to: '/layaways', label: 'Apartados', icon: Archive, roles: ['Admin','Supervisor','Cajero','Almacen']  }
 ]
 
 export default function Sidebar() {
   const { user, logout } = useAuthStore()
-  const navigate         = useNavigate()
-  const p                = usePermissions()
+  const navigate = useNavigate()
+  const p = usePermissions()
 
   const handleLogout = async () => {
     await authApi.logout().catch(() => {})
@@ -34,11 +34,11 @@ export default function Sidebar() {
   )
 
   const roleColors: Record<string, string> = {
-    Admin:      'bg-red-500',
-    Cajero:     'bg-green-500',
+    Admin: 'bg-red-500',
+    Cajero: 'bg-green-500',
     Inventario: 'bg-yellow-500',
     Supervisor: 'bg-blue-500',
-    Almacen:    'bg-purple-500',
+    Almacen: 'bg-purple-500',
   }
 
   return (
@@ -59,8 +59,7 @@ export default function Sidebar() {
             key={to}
             to={to}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm
-               transition-colors font-medium
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors font-medium
                ${isActive
                  ? 'bg-primary-600 text-white'
                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`
@@ -76,9 +75,7 @@ export default function Sidebar() {
       <div className="px-3 py-4 border-t border-gray-700">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 w-full px-3 py-2.5
-                     text-sm text-gray-300 hover:bg-gray-800
-                     hover:text-white rounded-lg transition-colors"
+          className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition-colors"
         >
           <LogOut size={18} />
           Cerrar sesión
