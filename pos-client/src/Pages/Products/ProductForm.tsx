@@ -7,6 +7,7 @@ import { productsApi, type Product, type SaveProductRequest } from '../../api/pr
 import { categoriesApi } from '../../api/categories'
 import { getImageUrl } from '../../utils/getImageUrl'
 
+type ProductFormData = Omit<SaveProductRequest, 'code'>
 interface Props {
   product: Product | null
   onClose: () => void
@@ -28,33 +29,27 @@ export default function ProductForm({ product, onClose }: Props) {
     queryFn: () => categoriesApi.getAll(true).then(r => r.data.data ?? []),
   })
 
-  const mapProductToDefaults = (p: Product): SaveProductRequest => ({
-    code: p.code,
-    barcode: p.barcode ?? undefined,
-    name: p.name,
-    description: p.description ?? undefined,
-    categoryId: p.categoryId,
-    costPrice: p.costPrice,
-    salePrice: p.salePrice,
-    stock: p.stock,
-    minStock: p.minStock,
-    unit: p.unit,
-  })
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<SaveProductRequest>({
-    defaultValues: product
-      ? mapProductToDefaults(product)
-      : {
-          unit: 'PZA',
-          stock: undefined,
-          minStock: undefined,
-          salePrice: undefined,
-        },
-  })
+  const { register, handleSubmit, formState: { errors } } =
+    useForm<ProductFormData>({
+      defaultValues: product
+        ? {
+            barcode: product.barcode ?? '',
+            name: product.name,
+            description: product.description ?? '',
+            categoryId: product.categoryId,
+            costPrice: product.costPrice,
+            salePrice: product.salePrice,
+            stock: product.stock,
+            minStock: product.minStock,
+            unit: product.unit,
+          }
+          : {
+              unit: 'PZA',
+              stock: 0,
+              minStock: 0,
+              costPrice: 0,
+            }
+    })
 
   const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -97,17 +92,15 @@ export default function ProductForm({ product, onClose }: Props) {
   }
 
   const mutation = useMutation({
-    mutationFn: (data: SaveProductRequest) =>
+    mutationFn: (data: ProductFormData) =>
       isEdit
-        ? productsApi.update(product!.id, data)
-        : productsApi.create(data),
-
+        ? productsApi.update(product!.id, data as SaveProductRequest)
+        : productsApi.create(data as SaveProductRequest),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['products'] })
       toast.success(isEdit ? 'Producto actualizado' : 'Producto creado')
       onClose()
     },
-
     onError: (err: any) =>
       toast.error(err.response?.data?.message ?? 'Error al guardar'),
   })
@@ -173,19 +166,18 @@ export default function ProductForm({ product, onClose }: Props) {
         {/* Código interno */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Código interno <span className="text-red-500">*</span>
+            Código interno
           </label>
-
-          <input
-            {...register('code', { required: 'Requerido' })}
-            className="input"
-          />
-
-          {errors.code && (
-            <p className="text-red-500 text-xs mt-1">
-              {errors.code.message}
-            </p>
-          )}
+          <div className="input bg-gray-50 text-gray-500 font-mono cursor-not-allowed select-none flex items-center justify-between">
+            {isEdit && (
+              <span className="text-xs bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full">
+                automático
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-gray-400 mt-1">
+            Asignado automáticamente por el sistema
+          </p>
         </div>
 
         {/* Código de barras */}
@@ -293,7 +285,7 @@ export default function ProductForm({ product, onClose }: Props) {
           </label>
 
           <input
-            {...register('stock', { valueAsNumber: true, min: 0 })}
+            {...register('stock', { valueAsNumber: undefined })}
             type="number"
             className="input"
           />
@@ -306,7 +298,7 @@ export default function ProductForm({ product, onClose }: Props) {
           </label>
 
           <input
-            {...register('minStock', { valueAsNumber: true, min: 0 })}
+            {...register('minStock', { valueAsNumber: undefined })}
             type="number"
             className="input"
           />

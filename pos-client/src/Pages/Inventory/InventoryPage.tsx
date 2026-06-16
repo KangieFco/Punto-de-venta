@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
@@ -11,24 +11,73 @@ import { usePermissions } from '../../hooks/usePermissions'
 
 type ModalType = 'entry' | 'output' | 'adjustment' | null
 type ActiveModalType = Exclude<ModalType, null>
+type PeriodFilter = 'day' | 'week' | 'all'
+
+const MOVEMENTS_PER_PAGE = 10
 
 export default function InventoryPage() {
   const qc = useQueryClient()
   const p = usePermissions()
+
   const [modal, setModal] = useState<ModalType>(null)
   const [filterProd, setFilterProd] = useState('')
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('day')
+  const [page, setPage] = useState(1)
+
   const { data: movements, isLoading } = useQuery({
     queryKey: ['inventory-movements'],
     queryFn: () => inventoryApi.getMovements().then(r => r.data.data ?? []),
   })
+
   const { data: products } = useQuery({
     queryKey: ['products', 'active'],
     queryFn: () => productsApi.getAll(true).then(r => r.data.data ?? []),
   })
-  const filtered = movements?.filter(m =>
-    !filterProd ||
-    m.productName.toLowerCase().includes(filterProd.toLowerCase())
-  ) ?? []
+
+  const filtered = useMemo(() => {
+    const today = new Date()
+
+    return (movements ?? [])
+      .filter(m => {
+        if (filterProd) {
+          const matchesProduct = m.productName
+            .toLowerCase()
+            .includes(filterProd.toLowerCase())
+
+          if (!matchesProduct) return false
+        }
+
+        const movementDate = new Date(m.createdAt)
+
+        if (periodFilter === 'day') {
+          return movementDate.toDateString() === today.toDateString()
+        }
+
+        if (periodFilter === 'week') {
+          const startOfWeek = new Date(today)
+          startOfWeek.setDate(today.getDate() - today.getDay())
+          startOfWeek.setHours(0, 0, 0, 0)
+
+          const endOfWeek = new Date(startOfWeek)
+          endOfWeek.setDate(startOfWeek.getDate() + 7)
+
+          return movementDate >= startOfWeek && movementDate < endOfWeek
+        }
+
+        return true
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+  }, [movements, filterProd, periodFilter])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / MOVEMENTS_PER_PAGE))
+
+  const paginatedMovements = filtered.slice(
+    (page - 1) * MOVEMENTS_PER_PAGE,
+    page * MOVEMENTS_PER_PAGE
+  )
 
   const typeLabel = (t: string) => ({
     Entry: { label: 'Entrada', variant: 'green' },
@@ -75,7 +124,6 @@ export default function InventoryPage() {
         )}
       </div>
 
-      {/* Stock actual por producto */}
       <div className="card mb-6 overflow-hidden p-0">
         <div className="px-6 py-4 border-b flex items-center gap-2">
           <History size={22} className="text-black" />
@@ -86,21 +134,11 @@ export default function InventoryPage() {
           <table className="w-full text-base">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="text-left px-4 py-4 font-bold text-black">
-                  Producto
-                </th>
-                <th className="text-left px-4 py-4 font-bold text-black">
-                  Categoría
-                </th>
-                <th className="text-center px-4 py-4 font-bold text-black">
-                  Stock
-                </th>
-                <th className="text-center px-4 py-4 font-bold text-black">
-                  Mínimo
-                </th>
-                <th className="text-left px-4 py-4 font-bold text-black">
-                  Estado
-                </th>
+                <th className="text-left px-4 py-4 font-bold text-black">Producto</th>
+                <th className="text-left px-4 py-4 font-bold text-black">Categoría</th>
+                <th className="text-center px-4 py-4 font-bold text-black">Stock</th>
+                <th className="text-center px-4 py-4 font-bold text-black">Mínimo</th>
+                <th className="text-left px-4 py-4 font-bold text-black">Estado</th>
               </tr>
             </thead>
 
@@ -108,21 +146,20 @@ export default function InventoryPage() {
               {products?.map(p => (
                 <tr key={p.id} className="hover:bg-gray-50">
                   <td className="px-4 py-4">
-                    <div className="text-base font-small text-black">
-                      {p.name}
-                    </div>
-                    <div className="text-sm font-small text-black">
-                      {p.code}
-                    </div>
+                    <div className="text-base font-small text-black">{p.name}</div>
+                    <div className="text-sm font-small text-black">{p.code}</div>
                   </td>
+
                   <td className="px-4 py-4 text-base font-small text-black">
                     {p.categoryName}
                   </td>
+
                   <td className="px-8 py-6 text-center font-small text-black">
                     <span className={p.isLowStock ? 'text-red-600' : 'text-black'}>
                       {p.stock} {p.unit}
                     </span>
                   </td>
+
                   <td className="px-4 py-4 text-center text-base font-small text-black">
                     {p.minStock}
                   </td>
@@ -140,14 +177,29 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      {/* Filtro de historial */}
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap gap-3 items-center">
         <input
           className="input max-w-sm text-base font-medium text-black placeholder:text-black"
           placeholder="Filtrar por producto..."
           value={filterProd}
-          onChange={e => setFilterProd(e.target.value)}
+          onChange={e => {
+            setFilterProd(e.target.value)
+            setPage(1)
+          }}
         />
+
+        <select
+          className="input max-w-xs text-base font-medium text-black"
+          value={periodFilter}
+          onChange={e => {
+            setPeriodFilter(e.target.value as PeriodFilter)
+            setPage(1)
+          }}
+        >
+          <option value="day">Movimientos de hoy</option>
+          <option value="week">Movimientos de esta semana</option>
+          <option value="all">Todos los movimientos</option>
+        </select>
       </div>
 
       <div className="card overflow-hidden p-0">
@@ -161,30 +213,14 @@ export default function InventoryPage() {
           <table className="w-full text-base">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="text-left px-4 py-4 font-bold text-black">
-                  Producto
-                </th>
-                <th className="text-left px-4 py-4 font-bold text-black">
-                  Tipo
-                </th>
-                <th className="text-center px-4 py-4 font-bold text-black">
-                  Cantidad
-                </th>
-                <th className="text-center px-4 py-4 font-bold text-black">
-                  Antes
-                </th>
-                <th className="text-center px-4 py-4 font-bold text-black">
-                  Después
-                </th>
-                <th className="text-left px-4 py-4 font-bold text-black">
-                  Motivo
-                </th>
-                <th className="text-left px-4 py-4 font-bold text-black">
-                  Usuario
-                </th>
-                <th className="text-left px-4 py-4 font-bold text-black">
-                  Fecha
-                </th>
+                <th className="text-left px-4 py-4 font-bold text-black">Producto</th>
+                <th className="text-left px-4 py-4 font-bold text-black">Tipo</th>
+                <th className="text-center px-4 py-4 font-bold text-black">Cantidad</th>
+                <th className="text-center px-4 py-4 font-bold text-black">Antes</th>
+                <th className="text-center px-4 py-4 font-bold text-black">Después</th>
+                <th className="text-left px-4 py-4 font-bold text-black">Motivo</th>
+                <th className="text-left px-4 py-4 font-bold text-black">Usuario</th>
+                <th className="text-left px-4 py-4 font-bold text-black">Fecha</th>
               </tr>
             </thead>
 
@@ -201,44 +237,82 @@ export default function InventoryPage() {
                     Sin movimientos
                   </td>
                 </tr>
-              ) : filtered.map(m => {
-                const { label, variant } = typeLabel(m.movementType)
+              ) : (
+                paginatedMovements.map(m => {
+                  const { label, variant } = typeLabel(m.movementType)
 
-                return (
-                  <tr key={m.id} className="hover:bg-gray-50">
-                    <td className="px-8 py-6 text-black-700 font-small">
-                      {m.productName}
-                    </td>
-                    <td className="px-4 py-4">
-                      <Badge label={label} variant={variant} />
-                    </td>
-                    <td className="px-8 py-6 text-center text-black-700 font-small">
-                      {m.quantity}
-                    </td>
-                    <td className="px-8 py-6 text-center text-black-700 font-small">
-                      {m.previousStock}
-                    </td>
-                    <td className="px-8 py-6 text-center text-black-700 font-small">
-                      {m.newStock}
-                    </td>
-                    <td className="px-8 py-6 text-black-700 font-small">
-                      {m.reason ?? m.reference ?? '—'}
-                    </td>
-                    <td className="px-8 py-6 text-black-700 font-small">
-                      {m.userFullName}
-                    </td>
-                    <td className="px-4 py-4 text-base font-sm text-black whitespace-nowrap">
-                      {new Date(m.createdAt).toLocaleString('es-MX')}
-                    </td>
-                  </tr>
-                )
-              })}
+                  return (
+                    <tr key={m.id} className="hover:bg-gray-50">
+                      <td className="px-8 py-6 text-black-700 font-small">
+                        {m.productName}
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <Badge label={label} variant={variant} />
+                      </td>
+
+                      <td className="px-8 py-6 text-center text-black-700 font-small">
+                        {m.quantity}
+                      </td>
+
+                      <td className="px-8 py-6 text-center text-black-700 font-small">
+                        {m.previousStock}
+                      </td>
+
+                      <td className="px-8 py-6 text-center text-black-700 font-small">
+                        {m.newStock}
+                      </td>
+
+                      <td className="px-8 py-6 text-black-700 font-small">
+                        {m.reason ?? m.reference ?? '—'}
+                      </td>
+
+                      <td className="px-8 py-6 text-black-700 font-small">
+                        {m.userFullName}
+                      </td>
+
+                      <td className="px-4 py-4 text-base font-sm text-black whitespace-nowrap">
+                        {new Date(m.createdAt).toLocaleString('es-MX')}
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
             </tbody>
           </table>
         </div>
+
+        {filtered.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-t">
+            <p className="text-sm text-black">
+              Mostrando {paginatedMovements.length} de {filtered.length} movimientos
+            </p>
+
+            <div className="flex items-center gap-2">
+              <button
+                className="btn-secondary px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={page === 1}
+                onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+              >
+                Anterior
+              </button>
+
+              <span className="text-sm font-semibold text-black">
+                Página {page} de {totalPages}
+              </span>
+
+              <button
+                className="btn-secondary px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={page === totalPages}
+                onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Modales */}
       {modal && (
         <InventoryModal
           type={modal}
@@ -329,7 +403,6 @@ function InventoryModal({
         onSubmit={handleSubmit(d => mutation.mutate(d))}
         className="space-y-5 text-base text-black"
       >
-        {/* Producto */}
         <div>
           <label className="block text-base font-bold text-black mb-2">
             Producto <span className="text-red-500">*</span>
@@ -355,12 +428,10 @@ function InventoryModal({
           )}
         </div>
 
-        {/* Cantidad o stock nuevo */}
         {type === 'adjustment' ? (
           <div>
             <label className="block text-base font-semibold text-black mb-2">
               Stock nuevo
-
               {selectedProd && (
                 <span className="text-black font-sm ml-2">
                   (actual: {selectedProd.stock})
@@ -391,7 +462,7 @@ function InventoryModal({
                 min: { value: 1, message: 'Mínimo 1' },
               })}
               type="number"
-              className="input text-base font-sm placeholder:text-black" 
+              className="input text-base font-sm placeholder:text-black"
             />
 
             {errors.quantity && (
@@ -402,7 +473,6 @@ function InventoryModal({
           </div>
         )}
 
-        {/* Motivo */}
         <div>
           <label className="block text-base font-semibold text-black mb-2">
             Motivo
