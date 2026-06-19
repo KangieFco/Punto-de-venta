@@ -73,21 +73,11 @@ export default function UsersPage() {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b">
             <tr>
-              <th className="text-left px-8 py-6 font-medium text-gray-600">
-                Nombre
-              </th>
-              <th className="text-left px-8 py-6 font-medium text-gray-600">
-                Usuario
-              </th>
-              <th className="text-left px-8 py-6 font-medium text-gray-600">
-                Rol
-              </th>
-              <th className="text-left px-8 py-6 font-medium text-gray-600">
-                Estado
-              </th>
-              <th className="text-left px-8 py-6 font-medium text-gray-600">
-                Creado
-              </th>
+              <th className="text-center px-4 py-4 font-bold text-black">Nombre</th>
+              <th className="text-center px-4 py-4 font-bold text-black">Usuario</th>
+              <th className="text-center px-4 py-4 font-bold text-black">Rol</th>
+              <th className="text-center px-4 py-4 font-bold text-black">Estado</th>
+              <th className="text-center px-4 py-4 font-bold text-black">Creado</th>
               <th className="px-8 py-6" />
             </tr>
           </thead>
@@ -100,22 +90,22 @@ export default function UsersPage() {
               </tr>
             ) : data?.map(u => (
               <tr key={u.id} className="hover:bg-black-50">
-                <td className="px-8 py-6 font-medium text-black-900">
+                <td className="px-8 py-6 text-center text-black-700 font-small">
                   {u.fullName}
                 </td>
-                <td className="px-8 py-6 font-mono text-black-600">
+                <td className="px-8 py-6 text-center text-black-700 font-small">
                   @{u.username}
                 </td>
-                <td className="px-8 py-6">
+                <td className="px-8 py-6 text-center">
                   <Badge label={u.roleName} variant={roleVariant(u.roleName)} />
                 </td>
-                <td className="px-8 py-6">
+                <td className="px-8 py-6 text-center">
                   <Badge
                     label={u.active ? 'Activo' : 'Inactivo'}
                     variant={u.active ? 'green' : 'red'}
                   />
                 </td>
-                <td className="px-8 py-6 text-black-500">
+                <td className="px-8 py-6 text-black-500 text-center">
                   {new Date(u.createdAt).toLocaleDateString('es-MX')}
                 </td>
                 <td className="px-8 py-6">
@@ -124,11 +114,11 @@ export default function UsersPage() {
                       onClick={() => setEditing(u)}
                       className="p-2 hover:bg-gray-100 rounded-lg"
                     >
-                      <Pencil size={24} className="text-gray-500" />
+                      <Pencil size={24} className="text-black-500" />
                     </button>
                     <button
                       onClick={() => toggleMutation.mutate(u)}
-                      className="p-2 hover:bg-gray-100 rounded-lg"
+                      className="p-2 hover:bg-black-100 rounded-lg"
                     >
                       {u.active
                         ? <ToggleRight size={24} className="text-green-600" />
