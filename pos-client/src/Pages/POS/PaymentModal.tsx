@@ -39,7 +39,7 @@ export default function PaymentModal({ cashRegisterId, onClose }: Props) {
     useForm<PaymentForm>({
       defaultValues: {
         paymentMethod: 1,
-        amountReceived: 0,
+        amountReceived: undefined as any,
         exchangeRate: 17,
       }
     })

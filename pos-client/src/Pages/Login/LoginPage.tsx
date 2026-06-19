@@ -42,12 +42,12 @@ export default function LoginPage() {
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
 
         <div className="relative z-10">
-          <div className="text-6xl">🏪</div>
+          <div className="text-6xl"></div>
         </div>
 
         <div className="relative z-10 text-white space-y-4">
           <h1 className="text-4xl font-extrabold tracking-tight">
-            POS System
+            KangSync System
           </h1>
           <p className="text-primary-100 max-w-md">
             Bienvenido al sistema de punto de venta. Administra ventas,
@@ -56,16 +56,12 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 text-xs text-primary-200">
-          © {new Date().getFullYear()} Todos los derechos reservados | KangSync Sofware.
+          © {new Date().getFullYear()} Todos los derechos reservados | KangSync Software.
         </div>
       </div>
 
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50">
         <div className="max-w-md w-full space-y-8 bg-white p-8 lg:p-12 rounded-2xl shadow-xl lg:shadow-none lg:bg-transparent">
-          <div className="lg:hidden text-center mb-4">
-            <div className="text-5xl mb-3">🏪</div>
-          </div>
-
           <div>
             <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
               Ingresar al sistema
