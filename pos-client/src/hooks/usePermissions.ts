@@ -12,13 +12,13 @@ export function usePermissions() {
     role,
 
     // ── Navegación ────────────────────────────────────────────
-    canAccessPOS:       is('Admin', 'Cajero', 'Supervisor', 'Almacen'),
-    canAccessProducts:  is('Admin', 'Inventario', 'Supervisor', 'Cajero'),
+    canAccessPOS:       is('Admin', 'Cajero', 'Supervisor'),
+    canAccessProducts: is('Admin', 'Inventario', 'Supervisor', 'Cajero'),
     canAccessCategories:is('Admin', 'Inventario', 'Cajero'),
     canAccessInventory: is('Admin', 'Inventario', 'Supervisor', 'Cajero'),
     canAccessCash:      is('Admin', 'Cajero', 'Supervisor', 'Cajero'),
     canAccessSales:     is('Admin', 'Supervisor', 'Cajero'),
-    canAccessUsers:     is('Admin', 'Almacen'),
+    canAccessUsers:     is('Admin'),
     canAccessReports:   is('Admin', 'Supervisor', 'Cajero'),
 
     // ── Productos ─────────────────────────────────────────────
@@ -27,12 +27,12 @@ export function usePermissions() {
     canToggleProduct:   is('Admin', 'Inventario', 'Cajero'),
 
     // ── Inventario ────────────────────────────────────────────
-    canAddEntry:        is('Admin', 'Inventario', 'Cajero'),
+    canAddEntry:        is('Admin', 'Inventario'),
     canAddOutput:       is('Admin', 'Inventario'),
     canAddAdjustment:   is('Admin', 'Inventario'),
 
     // ── Caja ──────────────────────────────────────────────────
-    canOpenCash:        is('Admin', 'Cajero', 'Supervisor', 'Cajero'),
+    canOpenCash:        is('Admin', 'Cajero', 'Supervisor'),
     canCloseCash:       is('Admin', 'Cajero', 'Supervisor'),
     canCashMovements:   is('Admin', 'Cajero', 'Supervisor'),
 
