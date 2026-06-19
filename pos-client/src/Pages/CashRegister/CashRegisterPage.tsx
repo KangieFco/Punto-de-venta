@@ -1,22 +1,9 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
-import {
-  DollarSign,
-  ArrowUpCircle,
-  ArrowDownCircle,
-  Lock,
-  TrendingUp,
-  Receipt,
-  AlertCircle
-} from 'lucide-react'
+import { DollarSign, ArrowUpCircle, ArrowDownCircle, Lock, TrendingUp, Receipt, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
-import {
-  cashRegistersApi,
-  type CashRegister,
-  type CashMovement,
-  type CashRegisterCloseResult
-} from '../../api/cashRegisters'
+import { cashRegistersApi, type CashRegister, type CashMovement, type CashRegisterCloseResult } from '../../api/cashRegisters'
 import Modal from '../../components/ui/Modal'
 
 export default function CashRegisterPage() {
@@ -25,21 +12,17 @@ export default function CashRegisterPage() {
   const [closeModal, setCloseModal] = useState(false)
   const [inModal, setInModal] = useState(false)
   const [outModal, setOutModal] = useState(false)
-  const [closeResult, setCloseResult] =
-    useState<CashRegisterCloseResult | null>(null)
-
+  const [closeResult, setCloseResult] = useState<CashRegisterCloseResult | null>(null)
   const { data: current, isLoading } = useQuery({
     queryKey: ['cash-register', 'current'],
     queryFn: () => cashRegistersApi.getCurrent().then(r => r.data.data ?? null),
   })
-
   const { data: movements } = useQuery({
     queryKey: ['cash-movements', current?.id],
     queryFn: () =>
       current
         ? cashRegistersApi.getMovements(current.id).then(r => r.data.data ?? [])
-        : Promise.resolve([]),
-    enabled: !!current,
+        : Promise.resolve([]), enabled: !!current,
   })
 
   if (isLoading)
@@ -223,18 +206,10 @@ function OpenedPanel({ register, movements, onClose, onIn, onOut }: {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b">
             <tr>
-              <th className="text-left px-8 py-6 font-medium text-black-600">
-                Tipo
-              </th>
-              <th className="text-left px-8 py-6 font-medium text-black-600">
-                Motivo
-              </th>
-              <th className="text-right px-8 py-6 font-medium text-black-600">
-                Monto
-              </th>
-              <th className="text-left px-8 py-6 font-medium text-black-600">
-                Hora
-              </th>
+              <th className="text-center px-4 py-4 font-bold text-black">Tipo</th>
+              <th className="text-center px-4 py-4 font-bold text-black">Motivo</th>
+              <th className="text-center px-4 py-4 font-bold text-black">Monto</th>
+              <th className="text-center px-4 py-4 font-bold text-black">Hora</th>
             </tr>
           </thead>
 
@@ -255,15 +230,15 @@ function OpenedPanel({ register, movements, onClose, onIn, onOut }: {
                   </span>
                 </td>
 
-                <td className="px-6 py-3 text-gray-600">
+                <td className="px-8 py-6 text-center text-black-700 font-medium">
                   {m.reason ?? '—'}
                 </td>
 
-                <td className="px-6 py-3 text-right font-bold">
+                <td className="px-8 py-6 text-center text-black-700 font-medium">
                   ${m.amount.toFixed(2)}
                 </td>
 
-                <td className="px-6 py-3 text-gray-500">
+                <td className="px-8 py-6 text-center text-black-800 font-medium">
                   {new Date(m.createdAt).toLocaleTimeString('es-MX', {
                     timeZone: 'America/Chihuahua',
                   })}
@@ -304,7 +279,7 @@ function OpenRegisterModal({ onClose, onSuccess }: {
         className="space-y-4"
       >
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-black-700 mb-1">
             Fondo inicial ($)
           </label>
           <input
@@ -312,7 +287,6 @@ function OpenRegisterModal({ onClose, onSuccess }: {
             type="text"
             inputMode="decimal"
             className="input text-xl font-bold text-center"
-            placeholder="0.00"
             autoFocus
           />
         </div>
@@ -377,7 +351,7 @@ function CloseRegisterModal({ register: reg, movements, onClose, onSuccess }: {
         className="space-y-4"
       >
         <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
-          <div className="flex justify-between text-gray-600">
+          <div className="flex justify-between text-black-600">
             <span>Fondo inicial</span>
             <span>${reg.openingAmount.toFixed(2)}</span>
           </div>
@@ -403,7 +377,7 @@ function CloseRegisterModal({ register: reg, movements, onClose, onSuccess }: {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-black-700 mb-1">
             Monto contado en caja ($)
           </label>
           <input

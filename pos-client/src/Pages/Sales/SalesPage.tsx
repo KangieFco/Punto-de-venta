@@ -183,12 +183,12 @@ export default function SalesPage() {
 
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="text-left px-8 py-4 font-semibold text-gray-600">Folio</th>
-                <th className="text-left px-8 py-4 font-semibold text-gray-600">Cajero</th>
-                <th className="text-right px-8 py-4 font-semibold text-gray-600">Total</th>
-                <th className="text-left px-8 py-4 font-semibold text-gray-600">Pago</th>
-                <th className="text-left px-8 py-4 font-semibold text-gray-600">Estado</th>
-                <th className="text-left px-8 py-4 font-semibold text-gray-600">Fecha</th>
+                <th className="text-left px-4 py-4 font-bold text-black">Folio</th>
+                <th className="text-left px-4 py-4 font-bold text-black">Cajero</th>
+                <th className="text-left px-4 py-4 font-bold text-black">Total</th>
+                <th className="text-left px-4 py-4 font-bold text-black">Pago</th>
+                <th className="text-left px-4 py-4 font-bold text-black">Estado</th>
+                <th className="text-left px-4 py-4 font-bold text-black">Fecha</th>
                 <th className="px-8 py-4" />
               </tr>
             </thead>
@@ -196,13 +196,13 @@ export default function SalesPage() {
             <tbody className="divide-y divide-gray-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-gray-400 text-lg">
+                  <td colSpan={7} className="text-center py-12 text-black-400 text-lg">
                     Cargando...
                   </td>
                 </tr>
               ) : filteredSales.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-gray-400 text-lg">
+                  <td colSpan={7} className="text-center py-12 text-black-400 text-lg">
                     Sin ventas
                   </td>
                 </tr>
@@ -213,26 +213,26 @@ export default function SalesPage() {
                       {s.folio}
                     </td>
 
-                    <td className="px-8 py-6 text-gray-700 font-medium">
+                    <td className="px-8 py-6 text-left text-black-700 font-small">
                       {s.userFullName}
                     </td>
 
-                    <td className="px-8 py-6 text-right font-bold text-gray-900">
+                    <td className="px-8 py-6 text-left text-black-700 font-small">
                       ${s.total.toFixed(2)}
                     </td>
 
-                    <td className="px-8 py-6 text-gray-700">
+                    <td className="px-8 py-6 text-gray-700 text.left">
                       {formatPaymentMethod(s.paymentMethod)}
                     </td>
 
-                    <td className="px-8 py-6">
+                    <td className="px-8 py-6 text-left ">
                       <Badge
                         label={s.status === 'Completed' ? 'Completada' : 'Cancelada'}
                         variant={s.status === 'Completed' ? 'green' : 'red'}
                       />
                     </td>
 
-                    <td className="px-8 py-6 text-gray-700 whitespace-nowrap">
+                    <td className="px-8 py-6 text-left text-black-700 font-small">
                       {new Date(s.createdAt).toLocaleString('es-MX')}
                     </td>
 
@@ -243,7 +243,7 @@ export default function SalesPage() {
                           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                           title="Ver detalle"
                         >
-                          <Eye size={28} className="text-gray-500" />
+                          <Eye size={28} className="text-black-500" />
                         </button>
 
                         {canCancel && s.status === 'Completed' && (

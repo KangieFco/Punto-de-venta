@@ -1,21 +1,21 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import {
-  Plus,
-  Pencil,
-  ToggleLeft,
-  ToggleRight,
-  Search,
-  AlertTriangle,
-} from 'lucide-react'
+import { Plus, Pencil, ToggleLeft, ToggleRight, Search, AlertTriangle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { productsApi, type Product } from '../../api/products'
 import Badge from '../../components/ui/Badge'
 import ProductForm from '../Products/ProductForm'
 import { getImageUrl } from '../../utils/getImageUrl'
+import { usePermissions } from '../../hooks/usePermissions'
 
 export default function ProductsPage() {
   const qc = useQueryClient()
+
+  const {
+    canCreateProduct,
+    canEditProduct,
+    canToggleProduct,
+  } = usePermissions()
 
   const [search, setSearch] = useState('')
   const [editing, setEditing] = useState<Product | null | undefined>(undefined)
@@ -26,12 +26,12 @@ export default function ProductsPage() {
   })
 
   const filtered = (data ?? [])
-  .filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.code.toLowerCase().includes(search.toLowerCase()) ||
-    p.barcode?.includes(search)
-  )
-  .sort((a, b) => Number(a.code) - Number(b.code))
+    .filter(p =>
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.code.toLowerCase().includes(search.toLowerCase()) ||
+      p.barcode?.includes(search)
+    )
+    .sort((a, b) => Number(a.code) - Number(b.code))
 
   const toggleMutation = useMutation({
     mutationFn: (p: Product) =>
@@ -45,25 +45,26 @@ export default function ProductsPage() {
   })
 
   return (
-    <div className="p-8">
+    <div className="p-8 text-base text-black">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Productos</h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <h1 className="text-xl font-bold text-black">Productos</h1>
+          <p className="text-base font-normal text-black mt-1">
             {filtered.length} de {data?.length ?? 0} productos
           </p>
         </div>
 
-        <button
-          onClick={() => setEditing(null)}
-          className="btn-primary flex items-center gap-2"
-        >
-          <Plus size={18} />
-          Nuevo producto
-        </button>
+        {canCreateProduct && (
+          <button
+            onClick={() => setEditing(null)}
+            className="btn-primary flex items-center gap-2 px-5 py-3 text-base font-semibold"
+          >
+            <Plus size={22} />
+            Nuevo producto
+          </button>
+        )}
       </div>
 
-      {/* Buscador */}
       <div className="relative mb-6 max-w-sm">
         <Search
           size={16}
@@ -78,178 +79,163 @@ export default function ProductsPage() {
         />
       </div>
 
-      {/* Tabla */}
       <div className="card overflow-hidden p-0">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">
-                Imagen
-              </th>
-
-              <th className="text-left px-4 py-3 font-medium text-gray-600">
-                Código
-              </th>
-
-              <th className="text-left px-4 py-3 font-medium text-gray-600">
-                Producto
-              </th>
-
-              <th className="text-left px-4 py-3 font-medium text-gray-600">
-                Categoría
-              </th>
-
-              <th className="text-right px-4 py-3 font-medium text-gray-600">
-                Precio
-              </th>
-
-              <th className="text-right px-4 py-3 font-medium text-gray-600">
-                Stock
-              </th>
-
-              <th className="text-left px-4 py-3 font-medium text-gray-600">
-                Estado
-              </th>
-
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-
-          <tbody className="divide-y divide-gray-100">
-            {isLoading ? (
+        <div className="overflow-x-auto">
+          <table className="w-full text-base">
+            <thead className="bg-gray-50 border-b">
               <tr>
-                <td
-                  colSpan={8}
-                  className="text-center py-12 text-gray-400"
-                >
-                  Cargando...
-                </td>
+                <th className="text-left px-4 py-4 font-bold text-black">Imagen</th>
+                <th className="text-left px-4 py-4 font-bold text-black">Código</th>
+                <th className="text-left px-4 py-4 font-bold text-black">Producto</th>
+                <th className="text-left px-4 py-4 font-bold text-black">Código de barras</th>
+                <th className="text-left px-4 py-4 font-bold text-black">Categoría</th>
+                <th className="text-right px-4 py-4 font-bold text-black">Precio</th>
+                <th className="text-right px-4 py-4 font-bold text-black">Stock</th>
+                <th className="text-left px-4 py-4 font-bold text-black">Estado</th>
+
+                {(canEditProduct || canToggleProduct) && (
+                  <th className="px-4 py-4" />
+                )}
               </tr>
-            ) : filtered.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={8}
-                  className="text-center py-12 text-gray-400"
-                >
-                  No se encontraron productos
-                </td>
-              </tr>
-            ) : (
-              filtered.map(p => {
-                const imageSrc = getImageUrl(p.imageUrl)
+            </thead>
 
-                return (
-                  <tr key={p.id} className="hover:bg-gray-50">
-                    {/* Imagen */}
-                    <td className="px-4 py-3">
-                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 border flex items-center justify-center">
-                        {imageSrc ? (
-                          <img
-                            src={imageSrc}
-                            alt={p.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-[10px] text-gray-400">
-                            Sin img
-                          </span>
-                        )}
-                      </div>
-                    </td>
+            <tbody className="divide-y divide-gray-100">
+              {isLoading ? (
+                <tr>
+                  <td
+                    colSpan={canEditProduct || canToggleProduct ? 9 : 8}
+                    className="text-center py-12 text-base font-normal text-black"
+                  >
+                    Cargando...
+                  </td>
+                </tr>
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={canEditProduct || canToggleProduct ? 9 : 8}
+                    className="text-center py-12 text-base font-normal text-black"
+                  >
+                    No se encontraron productos
+                  </td>
+                </tr>
+              ) : (
+                filtered.map(p => {
+                  const imageSrc = getImageUrl(p.imageUrl)
 
-                    {/* Código */}
-                    <td className="px-4 py-3 font-mono text-xs text-gray-600">
-                      {p.code}
-                    </td>
-
-                    {/* Producto */}
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-gray-900">
-                        {p.name}
-                      </div>
-
-                      {p.barcode && (
-                        <div className="text-xs text-gray-400">
-                          {p.barcode}
-                        </div>
-                      )}
-                    </td>
-
-                    {/* Categoría */}
-                    <td className="px-4 py-3 text-gray-600">
-                      {p.categoryName}
-                    </td>
-
-                    {/* Precio */}
-                    <td className="px-4 py-3 text-right font-medium text-gray-900">
-                      ${p.salePrice.toFixed(2)}
-                    </td>
-
-                    {/* Stock */}
-                    <td className="px-4 py-3 text-right">
-                      <span
-                        className={`font-medium ${
-                          p.isLowStock ? 'text-red-600' : 'text-gray-900'
-                        }`}
-                      >
-                        {p.stock} {p.unit}
-                      </span>
-
-                      {p.isLowStock && (
-                        <AlertTriangle
-                          size={14}
-                          className="inline ml-1 text-red-500"
-                        />
-                      )}
-                    </td>
-
-                    {/* Estado */}
-                    <td className="px-4 py-3">
-                      <Badge
-                        label={p.active ? 'Activo' : 'Inactivo'}
-                        variant={p.active ? 'green' : 'red'}
-                      />
-                    </td>
-
-                    {/* Acciones */}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1 justify-end">
-                        <button
-                          onClick={() => setEditing(p)}
-                          className="p-2 hover:bg-gray-100 rounded-lg"
-                          title="Editar producto"
-                        >
-                          <Pencil size={22} className="text-gray-500" />
-                        </button>
-
-                        <button
-                          onClick={() => toggleMutation.mutate(p)}
-                          className="p-2 hover:bg-gray-100 rounded-lg"
-                          title={p.active ? 'Desactivar producto' : 'Activar producto'}
-                        >
-                          {p.active ? (
-                            <ToggleRight
-                              size={28}
-                              className="text-green-600"
+                  return (
+                    <tr key={p.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-4">
+                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 border flex items-center justify-center">
+                          {imageSrc ? (
+                            <img
+                              src={imageSrc}
+                              alt={p.name}
+                              className="w-full h-full object-cover"
                             />
                           ) : (
-                            <ToggleLeft
-                              size={28}
-                              className="text-gray-400"
-                            />
+                            <span className="text-sm text-black">
+                              Sin img
+                            </span>
                           )}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })
-            )}
-          </tbody>
-        </table>
+                        </div>
+                      </td>
+
+                      <td className="px-4 py-4 text-base font-normal text-black">
+                        {p.code}
+                      </td>
+
+                      <td className="px-4 py-4 text-base font-medium text-black">
+                        {p.name}
+                      </td>
+
+                      <td className="px-4 py-4 text-left font-normal text-black">
+                        {p.barcode || '—'}
+                      </td>
+
+                      <td className="px-4 py-4 text-base font-normal text-black">
+                        {p.categoryName}
+                      </td>
+
+                      <td className="px-4 py-4 text-right text-base font-normal text-black">
+                        ${p.salePrice.toFixed(2)}
+                      </td>
+
+                      <td className="px-4 py-4 text-right text-base font-normal">
+                        <span className={p.isLowStock ? 'text-red-600' : 'text-black'}>
+                          {p.stock} {p.unit}
+                        </span>
+
+                        {p.isLowStock && (
+                          <AlertTriangle
+                            size={18}
+                            className="inline ml-1 text-red-500"
+                          />
+                        )}
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <Badge
+                          label={p.active ? 'Activo' : 'Inactivo'}
+                          variant={p.active ? 'green' : 'red'}
+                        />
+                      </td>
+
+                      {(canEditProduct || canToggleProduct) && (
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-1 justify-end">
+                            {canEditProduct && (
+                              <button
+                                onClick={() => setEditing(p)}
+                                className="p-2 hover:bg-gray-100 rounded-lg"
+                                title="Editar producto"
+                              >
+                                <Pencil size={22} className="text-black" />
+                              </button>
+                            )}
+
+                            {canToggleProduct && (
+                              <button
+                                onClick={() => toggleMutation.mutate(p)}
+                                className="p-2 hover:bg-gray-100 rounded-lg"
+                                title={
+                                  p.active
+                                    ? 'Desactivar producto'
+                                    : 'Activar producto'
+                                }
+                              >
+                                {p.active ? (
+                                  <ToggleRight
+                                    size={28}
+                                    className="text-green-600"
+                                  />
+                                ) : (
+                                  <ToggleLeft
+                                    size={28}
+                                    className="text-gray-400"
+                                  />
+                                )}
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {editing !== undefined && (
+      {editing !== undefined && canCreateProduct && editing === null && (
+        <ProductForm
+          product={editing}
+          onClose={() => setEditing(undefined)}
+        />
+      )}
+
+      {editing !== undefined && canEditProduct && editing !== null && (
         <ProductForm
           product={editing}
           onClose={() => setEditing(undefined)}
