@@ -8,13 +8,13 @@ import { usePermissions } from '../../hooks/usePermissions'
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['Admin','Supervisor','Cajero','Inventario'] },
   { to: '/pos', label: 'Punto de Venta', icon: ShoppingCart, roles: ['Admin','Supervisor','Cajero'] },
-  { to: '/products', label: 'Productos', icon: Package, roles: ['Admin','Inventario','Supervisor'] },
+  { to: '/products', label: 'Productos', icon: Package, roles: ['Admin','Inventario','Cajero'] },
   { to: '/categories', label: 'Categorías', icon: Tag, roles: ['Admin','Inventario'] },
   { to: '/inventory', label: 'Inventario', icon: AlertTriangle,   roles: ['Admin','Inventario','Supervisor'] },
   { to: '/cash', label: 'Caja', icon: DollarSign, roles: ['Admin','Cajero','Supervisor'] },
-  { to: '/sales', label: 'Ventas', icon: BarChart2, roles: ['Admin','Supervisor'] },
+  { to: '/sales', label: 'Ventas', icon: BarChart2, roles: ['Admin','Supervisor','Cajero'] },
   { to: '/users', label: 'Usuarios', icon: Users, roles: ['Admin'] },
-  { to: '/reports', label: 'Reportes', icon: BarChart2, roles: ['Admin','Supervisor'] },
+  { to: '/reports', label: 'Reportes', icon: BarChart2, roles: ['Admin','Supervisor','Cajero'] },
   { to: '/layaways', label: 'Apartados', icon: Archive, roles: ['Admin','Supervisor','Cajero','Almacen']  }
 ]
 
