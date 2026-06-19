@@ -163,21 +163,28 @@ export default function ProductForm({ product, onClose }: Props) {
           </div>
         </div>
 
-        {/* Código interno */}
+        {/* Precio venta */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Código interno
+            Precio venta <span className="text-red-500">*</span>
           </label>
-          <div className="input bg-gray-50 text-gray-500 font-mono cursor-not-allowed select-none flex items-center justify-between">
-            {isEdit && (
-              <span className="text-xs bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full">
-                automático
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-gray-400 mt-1">
-            Asignado automáticamente por el sistema
-          </p>
+
+          <input
+            {...register('salePrice', {
+              valueAsNumber: true,
+              required: 'Requerido',
+              min: { value: 0.01, message: 'Debe ser mayor a 0' },
+            })}
+            type="number"
+            step="0.01"
+            className="input"
+          />
+
+          {errors.salePrice && (
+            <p className="text-red-500 text-xs mt-1">
+              {errors.salePrice.message}
+            </p>
+          )}
         </div>
 
         {/* Código de barras */}
@@ -254,28 +261,17 @@ export default function ProductForm({ product, onClose }: Props) {
           </select>
         </div>
 
-        {/* Precio venta */}
+        {/* Stock mínimo */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Precio venta <span className="text-red-500">*</span>
+            Stock mínimo
           </label>
 
           <input
-            {...register('salePrice', {
-              valueAsNumber: true,
-              required: 'Requerido',
-              min: { value: 0.01, message: 'Debe ser mayor a 0' },
-            })}
+            {...register('minStock', { valueAsNumber: undefined })}
             type="number"
-            step="0.01"
             className="input"
           />
-
-          {errors.salePrice && (
-            <p className="text-red-500 text-xs mt-1">
-              {errors.salePrice.message}
-            </p>
-          )}
         </div>
 
         {/* Stock */}
@@ -286,19 +282,6 @@ export default function ProductForm({ product, onClose }: Props) {
 
           <input
             {...register('stock', { valueAsNumber: undefined })}
-            type="number"
-            className="input"
-          />
-        </div>
-
-        {/* Stock mínimo */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Stock mínimo
-          </label>
-
-          <input
-            {...register('minStock', { valueAsNumber: undefined })}
             type="number"
             className="input"
           />

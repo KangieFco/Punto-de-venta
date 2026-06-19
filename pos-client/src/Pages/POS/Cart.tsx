@@ -50,10 +50,10 @@ export default function Cart({ onCheckout, onDiscount }: Props) {
             <div key={item.product.id}
                  className="flex items-start gap-3 py-2.5 border-b border-gray-100 last:border-0">
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 leading-tight">
+                <p className="text-sm font-semibold text-black-900 leading-tight">
                   {item.product.name}
                 </p>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-black-400 mt-0.5">
                   {item.quantity} × ${item.product.salePrice.toFixed(2)}
                   {item.discount > 0 && (
                     <span className="text-orange-500 ml-1">
@@ -63,7 +63,7 @@ export default function Cart({ onCheckout, onDiscount }: Props) {
                 </p>
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
-                <span className="text-sm font-bold text-gray-900">
+                <span className="text-sm font-bold text-black-900">
                   ${item.subtotal.toFixed(2)}
                 </span>
               </div>
@@ -73,12 +73,12 @@ export default function Cart({ onCheckout, onDiscount }: Props) {
       </div>
 
       <div className="border-t bg-white px-5 py-4 space-y-2.5">
-        <div className="flex justify-between text-sm text-gray-500">
+        <div className="flex justify-between text-sm text-black-500">
           <span>Artículos</span>
           <span>{itemCount} pza</span>
         </div>
 
-        <div className="flex justify-between text-sm text-gray-600">
+        <div className="flex justify-between text-sm text-black-600">
           <span>Subtotal</span>
           <span>${subtotal.toFixed(2)}</span>
         </div>
@@ -103,7 +103,7 @@ export default function Cart({ onCheckout, onDiscount }: Props) {
 
         <div className="border-t border-dashed border-gray-200 pt-3">
           <div className="flex justify-between items-baseline">
-            <span className="text-lg font-bold text-gray-800">TOTAL</span>
+            <span className="text-lg font-bold text-black-800">TOTAL</span>
             <span className="text-3xl font-black text-primary-600">
               ${total.toFixed(2)}
             </span>

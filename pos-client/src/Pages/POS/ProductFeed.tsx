@@ -48,7 +48,6 @@ function ProductFeedCard({ item, isLatest, onRemove, onQty }: {
 
   return (
     <div className={`bg-white rounded-2xl border flex items-center gap-4 px-5 py-4 transition-all duration-200 ${isLatest ? 'border-primary-400 ring-2 ring-primary-100 shadow-lg' : 'border-gray-200 shadow-sm hover:shadow-md' }`}>
-
       {/* Imagen del producto */}
       <div className="w-30 h-30 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center shrink-0 border border-gray-200">
         {product.imageUrl ? (
@@ -81,11 +80,6 @@ function ProductFeedCard({ item, isLatest, onRemove, onQty }: {
               </p>
             )}
           </div>
-          {isLatest && (
-            <span className="shrink-0 text-xs bg-primary-100 text-primary-700 font-semibold px-2.5 py-1 rounded-full">
-              Último
-            </span>
-          )}
         </div>
 
         <div className="flex items-center justify-between mt-4">
@@ -124,7 +118,7 @@ function ProductFeedCard({ item, isLatest, onRemove, onQty }: {
               onClick={onRemove}
               className="p-2 hover:bg-red-50 rounded-xl transition-colors"
             >
-              <Trash2 size={16} className="text-red-400" />
+              <Trash2 size={24} className="text-red-400" />
             </button>
           </div>
         </div>
