@@ -45,9 +45,16 @@ export default function Sidebar() {
     <aside className="w-64 bg-gray-900 text-white flex flex-col min-h-screen">
       {/* Logo */}
       <div className="px-6 py-5 border-b border-gray-700">
-        <h1 className="text-xl font-bold text-white">🏪 POS System</h1>
-        <p className="text-xs text-gray-400 mt-1">{user?.fullName}</p>
-        <span className={`text-xs ${roleColors[user?.role ?? ''] || 'bg-gray-500'} px-2 py-0.5 rounded-full`}>
+        <div className="flex justify-center mb-4">
+          <img
+            src="/Logo_KS.png"
+            alt="Logo"
+            className="w-20 h-20 object-contain"
+          />
+        </div>
+        <h1 className="text-xl font-bold text-white">KangSync Software</h1>
+        <p className="text-sm text-gray-400 mt-1">{user?.fullName}</p>
+        <span className={`text-sm ${roleColors[user?.role ?? ''] || 'bg-gray-500'} px-2.5 py-1 rounded-full`}>
           {user?.role}
         </span>
       </div>

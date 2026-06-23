@@ -44,17 +44,20 @@ export default function LoginPage() {
         <div className="relative z-10">
           <div className="text-6xl"></div>
         </div>
-
+          <img
+            src="/KS_Banner.png"
+            alt="Logo"
+            className="absolute top-5 left-5 z-10 w-[min(350px,40vw)] h-auto object-contain"
+          />
         <div className="relative z-10 text-white space-y-4">
           <h1 className="text-4xl font-extrabold tracking-tight">
             KangSync System
           </h1>
           <p className="text-primary-100 max-w-md">
             Bienvenido al sistema de punto de venta. Administra ventas,
-            productos, inventario y caja desde un solo lugar.
+            productos, inventario, caja  y estadísticas desde un solo lugar.
           </p>
         </div>
-
         <div className="relative z-10 text-xs text-primary-200">
           © {new Date().getFullYear()} Todos los derechos reservados | KangSync Software.
         </div>
