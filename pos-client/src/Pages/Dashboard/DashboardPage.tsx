@@ -248,7 +248,7 @@ export default function DashboardPage() {
     <div className="p-8 space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
-          Bienvenido, {user?.fullName} 👋
+          Bienvenido, {user?.fullName} !!
         </h1>
         <p className="text-gray-500 mt-1">
           {new Date().toLocaleDateString('es-MX', {
