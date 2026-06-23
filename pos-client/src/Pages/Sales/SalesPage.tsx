@@ -1,59 +1,15 @@
 import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
-import { Eye, XCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { salesApi, type Sale } from '../../api/sales'
 import { useAuthStore } from '../../store/authStore'
-import Badge from '../../components/ui/Badge'
-import Modal from '../../components/ui/Modal'
-
-type PaymentBreakdownItem = {
-  method: string
-  amount: number
-}
-
-type PeriodFilter = 'day' | 'week' | 'all'
+import SalesFilters, { type PeriodFilter } from '../../features/Sales/components/SalesFilters'
+import SalesTable from '../../Pages/Sales/SalesTable'
+import SalesPagination from '../../features/Sales/components/SalesPagination'
+import SaleDetailModal from '../../Pages/Sales/modal/SaleDetailModal'
+import CancelSaleDialog from '../../features/Sales/components/CancelSaleDialog'
 
 const SALES_PER_PAGE = 10
-
-const paymentLabels: Record<string, string> = {
-  Cash: '💵 Efectivo',
-  Card: '💳 Tarjeta',
-  Dollar: '🇺🇸 Dólares',
-  Other: '🔄 Otro',
-  Mixed: '🔀 Pago mixto',
-}
-
-function formatPaymentMethod(method: string) {
-  return paymentLabels[method] ?? method
-}
-
-function parsePaymentBreakdown(value: any): PaymentBreakdownItem[] {
-  if (!value) return []
-
-  if (Array.isArray(value)) {
-    return value.map(p => ({
-      method: p.method,
-      amount: Number(p.amount) || 0,
-    }))
-  }
-
-  if (typeof value === 'string') {
-    return value
-      .split(',')
-      .map(part => {
-        const [method, amount] = part.split(':')
-        return {
-          method: method?.trim(),
-          amount: Number(amount) || 0,
-        }
-      })
-      .filter(p => p.method && p.amount > 0)
-  }
-
-  return []
-}
 
 export default function SalesPage() {
   const qc = useQueryClient()
@@ -143,155 +99,38 @@ export default function SalesPage() {
         </p>
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-3 items-center">
-        <input
-          className="input max-w-sm text-base font-medium"
-          placeholder="Buscar por folio, cajero, pago o estado..."
-          value={search}
-          onChange={e => {
-            setSearch(e.target.value)
-            setPage(1)
-          }}
-        />
-
-        <select
-          className="input max-w-xs text-base font-medium"
-          value={periodFilter}
-          onChange={e => {
-            setPeriodFilter(e.target.value as PeriodFilter)
-            setPage(1)
-          }}
-        >
-          <option value="day">Ventas de hoy</option>
-          <option value="week">Ventas de esta semana</option>
-          <option value="all">Todas las ventas</option>
-        </select>
-      </div>
+      <SalesFilters
+        search={search}
+        periodFilter={periodFilter}
+        onSearchChange={value => {
+          setSearch(value)
+          setPage(1)
+        }}
+        onPeriodFilterChange={value => {
+          setPeriodFilter(value)
+          setPage(1)
+        }}
+      />
 
       <div className="card overflow-hidden p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full table-fixed text-base">
-            <colgroup>
-              <col className="w-[20%]" />
-              <col className="w-[18%]" />
-              <col className="w-[12%]" />
-              <col className="w-[13%]" />
-              <col className="w-[14%]" />
-              <col className="w-[17%]" />
-              <col className="w-[6%]" />
-            </colgroup>
-
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="text-left px-4 py-4 font-bold text-black">Folio</th>
-                <th className="text-left px-4 py-4 font-bold text-black">Cajero</th>
-                <th className="text-left px-4 py-4 font-bold text-black">Total</th>
-                <th className="text-left px-4 py-4 font-bold text-black">Pago</th>
-                <th className="text-left px-4 py-4 font-bold text-black">Estado</th>
-                <th className="text-left px-4 py-4 font-bold text-black">Fecha</th>
-                <th className="px-8 py-4" />
-              </tr>
-            </thead>
-
-            <tbody className="divide-y divide-gray-100">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={7} className="text-center py-12 text-black-400 text-lg">
-                    Cargando...
-                  </td>
-                </tr>
-              ) : filteredSales.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="text-center py-12 text-black-400 text-lg">
-                    Sin ventas
-                  </td>
-                </tr>
-              ) : (
-                paginatedSales.map(s => (
-                  <tr key={s.id} className="hover:bg-gray-50">
-                    <td className="px-8 py-6 font-mono font-bold text-primary-600 text-base">
-                      {s.folio}
-                    </td>
-
-                    <td className="px-8 py-6 text-left text-black-700 font-small">
-                      {s.userFullName}
-                    </td>
-
-                    <td className="px-8 py-6 text-left text-black-700 font-small">
-                      ${s.total.toFixed(2)}
-                    </td>
-
-                    <td className="px-8 py-6 text-gray-700 text.left">
-                      {formatPaymentMethod(s.paymentMethod)}
-                    </td>
-
-                    <td className="px-8 py-6 text-left ">
-                      <Badge
-                        label={s.status === 'Completed' ? 'Completada' : 'Cancelada'}
-                        variant={s.status === 'Completed' ? 'green' : 'red'}
-                      />
-                    </td>
-
-                    <td className="px-8 py-6 text-left text-black-700 font-small">
-                      {new Date(s.createdAt).toLocaleString('es-MX')}
-                    </td>
-
-                    <td className="px-8 py-6">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => setDetail(s)}
-                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                          title="Ver detalle"
-                        >
-                          <Eye size={28} className="text-black-500" />
-                        </button>
-
-                        {canCancel && s.status === 'Completed' && (
-                          <button
-                            onClick={() => setCancelling(s)}
-                            className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Cancelar venta"
-                          >
-                            <XCircle size={28} className="text-red-500" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <SalesTable
+          sales={paginatedSales}
+          filteredCount={filteredSales.length}
+          isLoading={isLoading}
+          canCancel={canCancel}
+          onDetail={setDetail}
+          onCancel={setCancelling}
+        />
 
         {filteredSales.length > 0 && (
-          <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-t">
-            <p className="text-sm text-gray-600">
-              Mostrando {paginatedSales.length} de {filteredSales.length} ventas
-            </p>
-
-            <div className="flex items-center gap-2">
-              <button
-                className="btn-secondary px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={page === 1}
-                onClick={() => setPage(prev => Math.max(prev - 1, 1))}
-              >
-                Anterior
-              </button>
-
-              <span className="text-sm font-semibold text-gray-700">
-                Página {page} de {totalPages}
-              </span>
-
-              <button
-                className="btn-secondary px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={page === totalPages}
-                onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
-              >
-                Siguiente
-              </button>
-            </div>
-          </div>
+          <SalesPagination
+            page={page}
+            totalPages={totalPages}
+            showing={paginatedSales.length}
+            total={filteredSales.length}
+            onPrevious={() => setPage(prev => Math.max(prev - 1, 1))}
+            onNext={() => setPage(prev => Math.min(prev + 1, totalPages))}
+          />
         )}
       </div>
 
@@ -303,207 +142,12 @@ export default function SalesPage() {
         <CancelSaleDialog
           sale={cancelling}
           onClose={() => setCancelling(null)}
-          onConfirm={(reason) =>
+          onConfirm={reason =>
             cancelMutation.mutate({ id: cancelling.id, reason })
           }
           loading={cancelMutation.isPending}
         />
       )}
     </div>
-  )
-}
-
-function SaleDetailModal({
-  sale,
-  onClose,
-}: {
-  sale: Sale
-  onClose: () => void
-}) {
-  const breakdown = parsePaymentBreakdown((sale as any).paymentBreakdown)
-
-  return (
-    <Modal title={`Venta ${sale.folio}`} onClose={onClose} size="lg">
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 text-base">
-          <div>
-            <span className="text-gray-500">Cajero:</span>
-            <span className="ml-2 font-medium">{sale.userFullName}</span>
-          </div>
-
-          <div>
-            <span className="text-gray-500">Fecha:</span>
-            <span className="ml-2 font-medium">
-              {new Date(sale.createdAt).toLocaleString('es-MX')}
-            </span>
-          </div>
-
-          <div>
-            <span className="text-gray-500">Pago:</span>
-            <span className="ml-2 font-medium">
-              {formatPaymentMethod(sale.paymentMethod)}
-            </span>
-          </div>
-
-          <div>
-            <span className="text-gray-500 mr-2">Estado:</span>
-            <Badge
-              label={sale.status === 'Completed' ? 'Completada' : 'Cancelada'}
-              variant={sale.status === 'Completed' ? 'green' : 'red'}
-            />
-          </div>
-
-          {breakdown.length > 0 && (
-            <div className="col-span-2">
-              <p className="text-gray-500 text-sm mb-2">Desglose de pago:</p>
-
-              <div className="flex gap-3 flex-wrap">
-                {breakdown.map((p, i) => (
-                  <div
-                    key={i}
-                    className="bg-gray-50 border rounded-xl px-4 py-2 text-sm"
-                  >
-                    <span className="text-gray-500">
-                      {formatPaymentMethod(p.method)}
-                    </span>
-
-                    <span className="font-bold text-gray-900 ml-2">
-                      ${p.amount.toFixed(2)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <table className="w-full text-base border rounded-xl overflow-hidden">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">
-                Producto
-              </th>
-              <th className="text-right px-4 py-3 font-semibold text-gray-600">
-                Cant.
-              </th>
-              <th className="text-right px-4 py-3 font-semibold text-gray-600">
-                P. Unit.
-              </th>
-              <th className="text-right px-4 py-3 font-semibold text-gray-600">
-                Subtotal
-              </th>
-            </tr>
-          </thead>
-
-          <tbody className="divide-y divide-gray-100">
-            {sale.details.map((d, i) => (
-              <tr key={i}>
-                <td className="px-4 py-3">{d.productName}</td>
-                <td className="px-4 py-3 text-right">{d.quantity}</td>
-                <td className="px-4 py-3 text-right">
-                  ${d.unitPrice.toFixed(2)}
-                </td>
-                <td className="px-4 py-3 text-right font-medium">
-                  ${d.subtotal.toFixed(2)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        <div className="space-y-2 text-base border-t pt-4">
-          <div className="flex justify-between text-gray-600">
-            <span>Subtotal</span>
-            <span>${sale.subtotal.toFixed(2)}</span>
-          </div>
-
-          {sale.discount > 0 && (
-            <div className="flex justify-between text-red-600">
-              <span>Descuento</span>
-              <span>-${sale.discount.toFixed(2)}</span>
-            </div>
-          )}
-
-          <div className="flex justify-between font-bold text-xl text-gray-900">
-            <span>Total</span>
-            <span>${sale.total.toFixed(2)}</span>
-          </div>
-
-          <div className="flex justify-between text-gray-500">
-            <span>Pagó</span>
-            <span>${sale.amountReceived.toFixed(2)}</span>
-          </div>
-
-          {sale.changeAmount > 0 && (
-            <div className="flex justify-between text-green-600">
-              <span>Cambio</span>
-              <span>${sale.changeAmount.toFixed(2)}</span>
-            </div>
-          )}
-        </div>
-      </div>
-    </Modal>
-  )
-}
-
-function CancelSaleDialog({
-  sale,
-  onClose,
-  onConfirm,
-  loading,
-}: {
-  sale: Sale
-  onClose: () => void
-  onConfirm: (reason: string) => void
-  loading: boolean
-}) {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<{ reason: string }>()
-
-  return (
-    <Modal title="Cancelar venta" onClose={onClose} size="sm">
-      <form
-        onSubmit={handleSubmit(d => onConfirm(d.reason))}
-        className="space-y-4"
-      >
-        <p className="text-base text-gray-600">
-          ¿Cancelar la venta <strong>{sale.folio}</strong>? Se revertirá el inventario.
-        </p>
-
-        <div>
-          <label className="block text-base font-medium text-gray-700 mb-1">
-            Motivo <span className="text-red-500">*</span>
-          </label>
-
-          <input
-            {...register('reason', {
-              required: 'El motivo es requerido',
-            })}
-            className="input"
-            placeholder="Ej: Error en cobro"
-            autoFocus
-          />
-
-          {errors.reason && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.reason.message}
-            </p>
-          )}
-        </div>
-
-        <div className="flex gap-3 justify-end">
-          <button type="button" onClick={onClose} className="btn-secondary">
-            No cancelar
-          </button>
-
-          <button type="submit" disabled={loading} className="btn-danger">
-            {loading ? 'Cancelando...' : 'Sí, cancelar'}
-          </button>
-        </div>
-      </form>
-    </Modal>
   )
 }
