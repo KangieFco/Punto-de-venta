@@ -2,6 +2,7 @@ import type { Sale } from '../../../api/sales'
 import Badge from '../../../components/ui/Badge'
 import Modal from '../../../components/ui/Modal'
 import { formatPaymentMethod, parsePaymentBreakdown } from '../../../utils/salesFormatters'
+import { formatDateTime } from '../../../utils/date'
 
 type Props = {
   sale: Sale
@@ -23,7 +24,7 @@ export default function SaleDetailModal({ sale, onClose }: Props) {
           <div>
             <span className="text-gray-500">Fecha:</span>
             <span className="ml-2 font-medium">
-              {new Date(sale.createdAt).toLocaleString('es-MX')}
+              {formatDateTime(sale.createdAt)}
             </span>
           </div>
 

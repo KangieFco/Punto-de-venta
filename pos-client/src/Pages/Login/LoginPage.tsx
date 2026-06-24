@@ -45,7 +45,7 @@ export default function LoginPage() {
           <div className="text-6xl"></div>
         </div>
           <img
-            src="/KS_Banner.png"
+            src="/KS_BannerBCO.png"
             alt="Logo"
             className="absolute top-5 left-5 z-10 w-[min(350px,40vw)] h-auto object-contain"
           />
