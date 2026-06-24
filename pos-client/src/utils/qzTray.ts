@@ -64,10 +64,6 @@ export const printEscPos = async (
   const ESC  = '\x1B'
   const GS   = '\x1D'
   const INIT = `${ESC}@`           // Inicializar
-  const BOLD_ON    = `${ESC}E\x01`
-  const BOLD_OFF   = `${ESC}E\x00`
-  const ALIGN_C    = `${ESC}a\x01` // Centro
-  const ALIGN_L    = `${ESC}a\x00` // Izquierda
   const CUT        = `${GS}V\x42\x00` // Corte de papel
 
   const config = window.qz.configs.create(printerName)
