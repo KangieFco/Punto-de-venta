@@ -4,43 +4,28 @@ services:
     container_name: sqlserver-pos
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: ${SA_PASSWORD}
-      MSSQL_PID: "Developer"
+      SA_PASSWORD: "Admin123++"
     ports:
-      - "11433:1433"
+      - "1433"
     volumes:
       - sqlserver_data:/var/opt/mssql
-      - ./backups:/backups
-    restart: unless-stopped
 
-  api:
+  backend:
     build:
-      context: ./PosApi/src/PosApi
-      dockerfile: Dockerfile
-    container_name: pos-api
-    environment:
-      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
-      ASPNETCORE_URLS: http://+:8080
-
-      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=${DB_NAME};User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
-
-      Jwt__Key: ${JWT_KEY}
-      Jwt__Issuer: ${JWT_ISSUER}
-      Jwt__Audience: ${JWT_AUDIENCE}
-      Jwt__ExpiresInHours: ${JWT_EXPIRES_IN_HOURS}
-
-      Store__Name: ${STORE_NAME}
-      Store__Address: ${STORE_ADDRESS}
-      Store__Phone: ${STORE_PHONE}
-      Store__Footer: ${STORE_FOOTER}
-      
+      context: .
+      dockerfile: PosApi/src/PosApi/Dockerfile
+    container_name: pos-backend
     depends_on:
       - sqlserver
-    ports:
-      - "8080:8080"
-    volumes:
-      - product_images:/app/wwwroot/images/products
-    restart: unless-stopped
+    environment:
+      ASPNETCORE_URLS: "http://+:5227"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=PosDb;User Id=sa;Password=Admin123++;TrustServerCertificate=True;MultipleActiveResultSets=True;"
+      Jwt__Key: "ESTA_ES_UNA_CLAVE_SUPER_SECRETA_DE_MINIMO_32_CARACTERES"
+      Jwt__Issuer: "PosApi"
+      Jwt__Audience: "PosClient"
+      Jwt__ExpirationHours: "8"
+    expose:
+      - "5227"
 
   frontend:
     build:
@@ -48,11 +33,11 @@ services:
       dockerfile: Dockerfile
     container_name: pos-frontend
     depends_on:
-      - api
+      - backend
     ports:
       - "80:80"
-    restart: unless-stopped
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
 
 volumes:
   sqlserver_data:
-  product_images:
