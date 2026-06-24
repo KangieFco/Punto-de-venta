@@ -33,8 +33,7 @@ services:
       Store__Address: ${STORE_ADDRESS}
       Store__Phone: ${STORE_PHONE}
       Store__Footer: ${STORE_FOOTER}
-
-      AllowNegativeStock: ${ALLOW_NEGATIVE_STOCK}
+      
     depends_on:
       - sqlserver
     ports:
