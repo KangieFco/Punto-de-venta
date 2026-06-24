@@ -2,37 +2,38 @@ import client from './client'
 import type { ApiResponse } from '../types/api'
 
 export interface SalesReport {
-  from:           string
-  to:             string
-  totalSales:     number
+  from: string
+  to: string
+  totalSales: number
   cancelledSales: number
-  totalRevenue:   number
+  totalRevenue: number
   sales: {
-    folio:         string
-    userFullName:  string
-    total:         number
+    folio: string
+    userFullName: string
+    total: number
     paymentMethod: string
-    status:        string
-    createdAt:     string
+    status: string
+    createdAt: string
   }[]
 }
 
 export interface TopProduct {
-  productId:         number
-  productName:       string
+  productId: number
+  productName: string
   totalQuantitySold: number
-  totalRevenue:      number
+  totalRevenue: number
 }
 
 export interface DailySummary {
-  date:           string
-  totalSales:     number
-  totalRevenue:   number
-  cashRevenue:    number
-  cardRevenue:    number
-  otherRevenue:   number
+  date: string
+  totalSales: number
+  totalRevenue: number
+  cashRevenue: number
+  cardRevenue: number
+  dollarRevenue: number
+  otherRevenue: number
   cancelledSales: number
-  topProducts:    TopProduct[]
+  topProducts: TopProduct[]
 }
 
 export const reportsApi = {

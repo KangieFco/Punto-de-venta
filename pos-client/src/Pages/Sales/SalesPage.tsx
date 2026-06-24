@@ -8,8 +8,36 @@ import SalesTable from '../../Pages/Sales/SalesTable'
 import SalesPagination from '../../features/Sales/components/SalesPagination'
 import SaleDetailModal from '../../Pages/Sales/modal/SaleDetailModal'
 import CancelSaleDialog from '../../features/Sales/components/CancelSaleDialog'
+import { getLocalDateKey } from '../../utils/date'
 
 const SALES_PER_PAGE = 10
+const TIME_ZONE = 'America/Chihuahua'
+
+function getWeekRangeKeys(date = new Date()) {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  })
+
+  const parts = formatter.formatToParts(date)
+  const year = Number(parts.find(p => p.type === 'year')?.value)
+  const month = Number(parts.find(p => p.type === 'month')?.value)
+  const day = Number(parts.find(p => p.type === 'day')?.value)
+
+  const localDate = new Date(year, month - 1, day)
+  const startOfWeek = new Date(localDate)
+  startOfWeek.setDate(localDate.getDate() - localDate.getDay())
+
+  const endOfWeek = new Date(startOfWeek)
+  endOfWeek.setDate(startOfWeek.getDate() + 6)
+
+  return {
+    start: getLocalDateKey(startOfWeek),
+    end: getLocalDateKey(endOfWeek),
+  }
+}
 
 export default function SalesPage() {
   const qc = useQueryClient()
@@ -28,7 +56,8 @@ export default function SalesPage() {
   })
 
   const filteredSales = useMemo(() => {
-    const today = new Date()
+    const todayKey = getLocalDateKey(new Date())
+    const weekRange = getWeekRangeKeys()
 
     return (sales ?? [])
       .filter(s => {
@@ -40,25 +69,17 @@ export default function SalesPage() {
             s.userFullName.toLowerCase().includes(term) ||
             s.paymentMethod.toLowerCase().includes(term) ||
             s.status.toLowerCase().includes(term)
-
           if (!matchesSearch) return false
         }
 
-        const saleDate = new Date(s.createdAt)
+        const saleDateKey = getLocalDateKey(s.createdAt)
 
         if (periodFilter === 'day') {
-          return saleDate.toDateString() === today.toDateString()
+          return saleDateKey === todayKey
         }
 
         if (periodFilter === 'week') {
-          const startOfWeek = new Date(today)
-          startOfWeek.setDate(today.getDate() - today.getDay())
-          startOfWeek.setHours(0, 0, 0, 0)
-
-          const endOfWeek = new Date(startOfWeek)
-          endOfWeek.setDate(startOfWeek.getDate() + 7)
-
-          return saleDate >= startOfWeek && saleDate < endOfWeek
+          return saleDateKey >= weekRange.start && saleDateKey <= weekRange.end
         }
 
         return true
