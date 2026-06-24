@@ -4,13 +4,56 @@ services:
     container_name: sqlserver-pos
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "Admin123++"
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD}
       MSSQL_PID: "Developer"
     ports:
       - "11433:1433"
     volumes:
       - sqlserver_data:/var/opt/mssql
+      - ./backups:/backups
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./PosApi/src/PosApi
+      dockerfile: Dockerfile
+    container_name: pos-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      ASPNETCORE_URLS: http://+:8080
+
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=${DB_NAME};User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+
+      Jwt__Key: ${JWT_KEY}
+      Jwt__Issuer: ${JWT_ISSUER}
+      Jwt__Audience: ${JWT_AUDIENCE}
+      Jwt__ExpiresInHours: ${JWT_EXPIRES_IN_HOURS}
+
+      Store__Name: ${STORE_NAME}
+      Store__Address: ${STORE_ADDRESS}
+      Store__Phone: ${STORE_PHONE}
+      Store__Footer: ${STORE_FOOTER}
+
+      AllowNegativeStock: ${ALLOW_NEGATIVE_STOCK}
+    depends_on:
+      - sqlserver
+    ports:
+      - "8080:8080"
+    volumes:
+      - product_images:/app/wwwroot/images/products
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./pos-client
+      dockerfile: Dockerfile
+    container_name: pos-frontend
+    depends_on:
+      - api
+    ports:
+      - "80:80"
     restart: unless-stopped
 
 volumes:
   sqlserver_data:
+  product_images:

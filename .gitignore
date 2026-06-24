@@ -1,0 +1,25 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+
+# Frontend
+node_modules/
+dist/
+.env
+.env.local
+.env.production
+
+# Backend
+appsettings.Development.json
+appsettings.Local.json
+backups/
+
+# Docker / logs / temporales
+*.log
+*.tmp
+*.deb
+
+# Imágenes subidas por usuarios/clientes
+PosApi/src/PosApi/wwwroot/images/products/

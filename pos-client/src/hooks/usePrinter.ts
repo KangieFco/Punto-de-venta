@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { connectQz, getPrinters, printTicket, disconnectQz } from '../utils/qzTray'
+import { useState} from 'react'
+import { getPrinters, printTicket} from '../utils/qzTray'
 import toast from 'react-hot-toast'
 
 const PRINTER_KEY = 'pos_printer'
