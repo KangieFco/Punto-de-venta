@@ -37,6 +37,7 @@ export default function CreateLayawayModal({
         clientName: d.clientName,
         clientPhone: d.clientPhone || undefined,
         deposit: d.deposit,
+        paymentMethod: 1,
         items: items.map(i => ({
           productId: i.product.id,
           quantity: i.quantity,
@@ -93,10 +94,7 @@ export default function CreateLayawayModal({
               {i.product.name}
               <span className="text-gray-400 ml-1">×{i.quantity}</span>
             </span>
-
-            <span className="font-medium">
-              ${i.subtotal.toFixed(2)}
-            </span>
+            <span className="font-medium"> ${i.subtotal.toFixed(2)} </span>
           </div>
         ))}
 
@@ -123,9 +121,7 @@ export default function CreateLayawayModal({
           />
 
           {errors.clientName && (
-            <p className="text-red-500 text-xs mt-1">
-              {errors.clientName.message}
-            </p>
+            <p className="text-red-500 text-xs mt-1"> {errors.clientName.message} </p>
           )}
         </div>
 
@@ -158,7 +154,6 @@ export default function CreateLayawayModal({
             type="text"
             inputMode="decimal"
             className="input"
-            placeholder="0.00"
           />
 
           {errors.deposit && (

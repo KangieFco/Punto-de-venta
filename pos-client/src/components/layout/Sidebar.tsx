@@ -3,7 +3,6 @@ import { ShoppingCart, Package, LayoutDashboard, Users, BarChart2, DollarSign, L
 import { useAuthStore } from '../../store/authStore'
 import { authApi } from '../../api/auth'
 import { Archive } from 'lucide-react'
-import { usePermissions } from '../../hooks/usePermissions'
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['Admin','Supervisor','Cajero','Inventario'] },
@@ -21,7 +20,6 @@ const navItems = [
 export default function Sidebar() {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
-  const p = usePermissions()
 
   const handleLogout = async () => {
     await authApi.logout().catch(() => {})
