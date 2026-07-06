@@ -8,15 +8,21 @@ public class CreateSaleRequest
     [Required, MinLength(1)]
     public List<SaleItemRequest> Items { get; set; } = new();
 
-    [Required]
-    public PaymentMethod PaymentMethod { get; set; }
-
-    [Required, Range(0.01, double.MaxValue)]
-    public decimal AmountReceived { get; set; }
+    [Required, MinLength(1)]
+    public List<PaymentRequest> Payments { get; set; } = new();
 
     [Range(0, double.MaxValue)]
     public decimal Discount { get; set; } = 0;
-    
+}
+
+public class PaymentRequest
+{
+    [Required]
+    public PaymentMethod Method { get; set; }
+
+    [Required, Range(0.01, double.MaxValue)]
+    public decimal Amount { get; set; }
+
     [Range(0.01, double.MaxValue)]
     public decimal ExchangeRate { get; set; } = 1;
 }

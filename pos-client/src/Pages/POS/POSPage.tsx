@@ -123,11 +123,17 @@ export default function POSPage() {
 
       {/* Modales */}
       {showPayment && (
-        <PaymentModal
-          cashRegisterId={cashRegister.id}
-          onClose={() => setShowPayment(false)}
-        />
-      )}
+      <PaymentModal
+        cashRegisterId={cashRegister.id}
+        onClose={() => {
+          setShowPayment(false)
+
+          setTimeout(() => {
+            barcodeRef.current?.focus()
+          }, 0)
+        }}
+      />
+    )}
 
       {showDiscount && (
         <DiscountModal onClose={() => setShowDiscount(false)} />

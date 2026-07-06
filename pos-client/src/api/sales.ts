@@ -36,11 +36,10 @@ export interface Sale {
 
 export interface CreateSaleRequest {
   items: { productId: number; quantity: number; discount: number }[]
-  paymentMethod: number
-  amountReceived: number
   discount: number
   cashRegisterId: number
   exchangeRate?: number
+  payments: { method: number; amount: number; exchangeRate: number }[]
 }
 
 export const salesApi = {

@@ -96,29 +96,75 @@ public class SaleService : ISaleService
             throw new BusinessException("El descuento general no puede ser mayor al subtotal.");
 
         var total = subtotal - request.Discount;
+        
+        if (request.Payments == null || !request.Payments.Any())
+    throw new BusinessException("Debe registrar al menos un método de pago.");
 
-        if (request.AmountReceived < 0)
-            throw new BusinessException("El monto recibido no puede ser negativo.");
+decimal totalPaidInPesos = 0;
+decimal cashLikePaidInPesos = 0;
+decimal nonCashPaidInPesos = 0;
+decimal dollarExchangeRate = 1;
 
-        decimal amountInPesos;
+foreach (var payment in request.Payments)
+{
+    if (payment.Amount <= 0)
+        throw new BusinessException("El monto de cada pago debe ser mayor a cero.");
 
-        if (request.PaymentMethod == PaymentMethod.Dollar)
-        {
-            if (request.ExchangeRate <= 0)
-                throw new BusinessException("El tipo de cambio debe ser mayor a cero.");
+    decimal amountInPesos;
 
-            amountInPesos = request.AmountReceived * request.ExchangeRate;
-        }
+    if (payment.Method == PaymentMethod.Dollar)
+    {
+        if (payment.ExchangeRate <= 0)
+            throw new BusinessException("El tipo de cambio debe ser mayor a cero.");
+
+        amountInPesos = payment.Amount * payment.ExchangeRate;
+        dollarExchangeRate = payment.ExchangeRate;
+        cashLikePaidInPesos += amountInPesos;
+    }
+    else
+    {
+        amountInPesos = payment.Amount;
+
+        if (payment.Method == PaymentMethod.Cash)
+            cashLikePaidInPesos += amountInPesos;
         else
+            nonCashPaidInPesos += amountInPesos;
+    }
+
+    totalPaidInPesos += amountInPesos;
+}
+
+    var change = totalPaidInPesos - total;
+
+    if (change < 0)
+        throw new BusinessException(
+            $"El monto recibido es menor al total (${total:F2}).");
+
+    var cashNeededAfterNonCash = Math.Max(0, total - nonCashPaidInPesos);
+    var realChange = cashLikePaidInPesos - cashNeededAfterNonCash;
+
+    if (realChange < 0)
+        realChange = 0;
+
+    var paymentMethod =
+        request.Payments.Count == 1
+            ? request.Payments.First().Method
+            : PaymentMethod.Other;
+
+    var paymentBreakdown = string.Join(",",
+        request.Payments.Select(p =>
         {
-            amountInPesos = request.AmountReceived;
-        }
+            decimal amountInPesos = p.Method == PaymentMethod.Dollar
+                ? p.Amount * p.ExchangeRate
+                : p.Amount;
 
-        var change = amountInPesos - total;
+            return $"{p.Method}:{amountInPesos.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+        })
+    );
 
-        if (change < 0)
-            throw new BusinessException(
-                $"El monto recibido es menor al total (${total:F2}).");
+    var amountReceived = totalPaidInPesos;
+    var exchangeRate = dollarExchangeRate;
+        
         var folio = await GenerateFolioAsync();
 
         var sale = new Sale
@@ -130,10 +176,11 @@ public class SaleService : ISaleService
             Discount = request.Discount,
             Tax = 0,
             Total = total,
-            PaymentMethod = request.PaymentMethod,
-            AmountReceived = request.AmountReceived,
-            ChangeAmount = change,
-            ExchangeRate = request.ExchangeRate,
+            PaymentMethod = paymentMethod,
+            PaymentBreakdown = paymentBreakdown,
+            AmountReceived = amountReceived,
+            ChangeAmount = realChange,
+            ExchangeRate = exchangeRate,
             Status = SaleStatus.Completed,
             CreatedAt = DateTime.UtcNow,
             SaleDetails = details
