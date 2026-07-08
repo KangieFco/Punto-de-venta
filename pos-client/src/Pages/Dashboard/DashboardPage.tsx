@@ -211,17 +211,27 @@ export default function DashboardPage() {
     )
   }
 
-  const expiredLayaways = layaways.filter(
-    l => l.isExpired && isActiveLayaway(l.status)
-  )
-
   const activeLayaways = layaways.filter(
     l => isActiveLayaway(l.status)
   )
 
-  const todayExpiringLayaways = layaways.filter(
-    l => toNumber(l.daysLeft) === 0 && isActiveLayaway(l.status)
+  const expiredLayaways = activeLayaways.filter(
+    l => l.isExpired
   )
+
+  const todayExpiringLayaways = activeLayaways.filter(l => {
+    if (l.isExpired) return false
+
+    const today = new Date()
+
+    const expireDate = new Date(l.expiresAt)
+
+    return (
+      expireDate.getFullYear() === today.getFullYear() &&
+      expireDate.getMonth() === today.getMonth() &&
+      expireDate.getDate() === today.getDate()
+    )
+  })
 
   const alerts = [
     !cashRegister ? 'Caja sin abrir' : null,

@@ -83,7 +83,7 @@ export default function LayawaysTable({
                       <Eye size={24} className="text-gray-500" />
                     </button>
 
-                    {l.status === 'Pending' && (
+                    {l.status === 'Pending' && !l.isExpired && (
                       <button
                         onClick={() => onDeposit(l)}
                         className="p-2 hover:bg-green-50 rounded-lg"

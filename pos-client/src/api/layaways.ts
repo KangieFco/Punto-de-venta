@@ -58,8 +58,14 @@ export const layawaysApi = {
   }) => client.post<ApiResponse<Layaway>>('/layaways', data),
 
   addDeposit: (id: number, amount: number, paymentMethod: number) =>
-  client.post<ApiResponse<Layaway>>(`/layaways/${id}/deposit`, { amount, paymentMethod }),
+    client.post<ApiResponse<Layaway>>(`/layaways/${id}/deposit`, {
+      amount,
+      paymentMethod,
+    }),
 
   cancel: (id: number) =>
-    client.post(`/layaways/${id}/cancel`),
+    client.post<ApiResponse<Layaway>>(`/layaways/${id}/cancel`),
+
+  expire: (id: number) =>
+    client.post<ApiResponse<Layaway>>(`/layaways/${id}/expire`),
 }

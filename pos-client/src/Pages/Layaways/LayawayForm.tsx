@@ -72,10 +72,7 @@ export default function CreateLayawayModal({
     <Modal title="Nuevo apartado" onClose={onClose} size="md">
       {/* Productos del carrito */}
       <div className="bg-gray-50 rounded-xl p-4 mb-5 space-y-2">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-          Artículos a apartar
-        </p>
-
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Artículos a apartar</p>
         {items.map(i => (
           <div key={i.product.id} className="flex items-center gap-3 text-sm">
             <div className="w-8 h-8 rounded-lg bg-gray-200 overflow-hidden shrink-0">

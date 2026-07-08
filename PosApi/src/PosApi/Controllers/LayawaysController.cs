@@ -8,6 +8,7 @@ using PosApi.Domain.Entities;
 using PosApi.Domain.Enums;
 using PosApi.DTOs.Layaways;
 using PosApi.Services.Interfaces;
+
 namespace PosApi.Controllers;
 
 [ApiController]
@@ -19,14 +20,15 @@ public class LayawaysController : ControllerBase
     private readonly ICurrentUserService _currentUser;
     private readonly IInventoryService _inventoryService;
 
-    public LayawaysController( AppDbContext db, ICurrentUserService currentUser, IInventoryService inventoryService)
+    public LayawaysController(
+        AppDbContext db,
+        ICurrentUserService currentUser,
+        IInventoryService inventoryService)
     {
         _db = db;
         _currentUser = currentUser;
         _inventoryService = inventoryService;
     }
-
-    // ── GET todos 
 
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] string? status = null)
@@ -48,8 +50,6 @@ public class LayawaysController : ControllerBase
         return Ok(ApiResponse<List<LayawayDto>>.Ok(list.Select(ToDto).ToList()));
     }
 
-    // ── GET por id 
-
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
@@ -57,47 +57,50 @@ public class LayawaysController : ControllerBase
         return Ok(ApiResponse<LayawayDto>.Ok(ToDto(layaway)));
     }
 
-    // ── POST crear apartado
-
     [HttpPost]
     [Authorize(Roles = "Admin,Cajero,Supervisor,Almacen")]
     public async Task<IActionResult> Create([FromBody] CreateLayawayRequest req)
     {
         var productIds = req.Items.Select(i => i.ProductId).Distinct().ToList();
+
         var products = await _db.Products
             .Where(p => productIds.Contains(p.Id) && p.Active)
             .ToListAsync();
 
         if (products.Count != productIds.Count)
-            throw new BusinessException(
-                "Uno o más productos no encontrados o inactivos.");
+            throw new BusinessException("Uno o más productos no encontrados o inactivos.");
+
         foreach (var item in req.Items)
         {
             var p = products.First(x => x.Id == item.ProductId);
+
             if (p.Stock < item.Quantity)
-                throw new BusinessException( $"Stock insuficiente para '{p.Name}'. " + $"Disponible: {p.Stock}, solicitado: {item.Quantity}.");
+                throw new BusinessException(
+                    $"Stock insuficiente para '{p.Name}'. Disponible: {p.Stock}, solicitado: {item.Quantity}.");
         }
 
         var details = req.Items.Select(item =>
         {
             var p = products.First(x => x.Id == item.ProductId);
+
             return new LayawayDetail
             {
                 ProductId = item.ProductId,
-                Quantity  = item.Quantity,
+                Quantity = item.Quantity,
                 UnitPrice = p.SalePrice,
-                Subtotal  = p.SalePrice * item.Quantity
+                Subtotal = p.SalePrice * item.Quantity
             };
         }).ToList();
 
         var total = details.Sum(d => d.Subtotal);
-        var isFullyPaid = req.Deposit >= total;
-        var folio   = await GenerateFolioAsync();
-        var userId  = _currentUser.UserId;
 
         if (req.Deposit > total)
-            throw new BusinessException(
-                "El anticipo no puede ser mayor al total.");
+            throw new BusinessException("El anticipo no puede ser mayor al total.");
+
+        var isFullyPaid = req.Deposit >= total;
+        var folio = await GenerateFolioAsync();
+        var userId = _currentUser.UserId;
+        var now = DateTime.Now;
 
         var layaway = new Layaway
         {
@@ -109,11 +112,11 @@ public class LayawaysController : ControllerBase
             Remaining = total - req.Deposit,
             Status = isFullyPaid ? "Completed" : "Pending",
             UserId = userId,
-            ExpiresAt = DateTime.Now.AddMonths(1),
-            CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now,
-            CompletedAt = isFullyPaid ? DateTime.Now : null,
-            Details     = details
+            ExpiresAt = now.Date.AddMonths(1),
+            CreatedAt = now,
+            UpdatedAt = now,
+            CompletedAt = isFullyPaid ? now : null,
+            Details = details
         };
 
         _db.Layaways.Add(layaway);
@@ -122,29 +125,31 @@ public class LayawaysController : ControllerBase
         {
             _db.LayawayPayments.Add(new LayawayPayment
             {
-                Layaway       = layaway,
-                Amount        = req.Deposit,
+                Layaway = layaway,
+                Amount = req.Deposit,
                 PaymentMethod = req.PaymentMethod,
-                UserId        = userId,
-                Notes         = "Anticipo inicial",
-                CreatedAt     = DateTime.Now
+                UserId = userId,
+                Notes = "Anticipo inicial",
+                CreatedAt = now
             });
         }
 
         foreach (var item in req.Items)
         {
             await _inventoryService.DiscountStockAsync(
-                item.ProductId, item.Quantity,
-                $"Apartado {folio}", userId);
-        }
-
-        if (isFullyPaid)
-        {
-            await _db.SaveChangesAsync(); // guardar layaway primero
-            await GenerateSaleAsync(layaway, userId);
+                item.ProductId,
+                item.Quantity,
+                $"Apartado {folio}",
+                userId);
         }
 
         await _db.SaveChangesAsync();
+
+        if (isFullyPaid)
+        {
+            await GenerateSaleAsync(layaway, userId);
+            await _db.SaveChangesAsync();
+        }
 
         return Ok(ApiResponse<LayawayDto>.Ok(
             ToDto(await GetFull(layaway.Id)),
@@ -153,28 +158,29 @@ public class LayawaysController : ControllerBase
                 : "Apartado creado correctamente."));
     }
 
-    // ── POST  abono
-
     [HttpPost("{id}/deposit")]
     [Authorize(Roles = "Admin,Cajero,Supervisor,Almacen")]
-    public async Task<IActionResult> AddDeposit(
-        int id, [FromBody] AddDepositRequest req)
+    public async Task<IActionResult> AddDeposit(int id, [FromBody] AddDepositRequest req)
     {
         var layaway = await GetFull(id);
         var userId = _currentUser.UserId;
+        var today = DateTime.Now.Date;
 
         if (layaway.Status == "Completed")
             throw new BusinessException("Este apartado ya está completado.");
+
         if (layaway.Status == "Cancelled")
             throw new BusinessException("Este apartado fue cancelado.");
-        if (layaway.Status == "Expired")
-            throw new BusinessException("Este apartado está expirado.");
-        if (req.Amount > layaway.Remaining)
-            throw new BusinessException(
-                $"El abono (${req.Amount:F2}) supera el restante " +
-                $"(${layaway.Remaining:F2}).");
 
-        // Registrar pago
+        if (layaway.Status == "Expired")
+            throw new BusinessException("Este apartado está vencido.");
+
+        if (layaway.ExpiresAt.Date < today)
+            throw new BusinessException("Este apartado ya venció. Libera el producto para regresar el inventario.");
+
+        if (req.Amount > layaway.Remaining)
+            throw new BusinessException($"El abono (${req.Amount:F2}) supera el restante (${layaway.Remaining:F2}).");
+
         _db.LayawayPayments.Add(new LayawayPayment
         {
             LayawayId = layaway.Id,
@@ -190,6 +196,7 @@ public class LayawaysController : ControllerBase
         layaway.UpdatedAt = DateTime.Now;
 
         var isNowComplete = layaway.Remaining <= 0;
+
         if (isNowComplete)
         {
             layaway.Status = "Completed";
@@ -197,12 +204,15 @@ public class LayawaysController : ControllerBase
         }
 
         await _db.SaveChangesAsync();
-        if (isNowComplete)
-            await GenerateSaleAsync(layaway, userId);
 
-        await _db.SaveChangesAsync();
+        if (isNowComplete)
+        {
+            await GenerateSaleAsync(layaway, userId);
+            await _db.SaveChangesAsync();
+        }
 
         var updated = await GetFull(id);
+
         return Ok(ApiResponse<LayawayDto>.Ok(
             ToDto(updated),
             isNowComplete
@@ -210,30 +220,33 @@ public class LayawaysController : ControllerBase
                 : "Abono registrado correctamente."));
     }
 
-    // ── POST cancelar ─────────────────────────────────────────
-
     [HttpPost("{id}/cancel")]
-    [Authorize(Roles = "Admin, Cajero, Supervisor")]
+    [Authorize(Roles = "Admin,Cajero,Supervisor")]
     public async Task<IActionResult> Cancel(int id)
     {
         var layaway = await GetFull(id);
-        var userId  = _currentUser.UserId;
+        var userId = _currentUser.UserId;
 
         if (layaway.Status == "Cancelled")
             throw new BusinessException("Ya está cancelado.");
+
         if (layaway.Status == "Completed")
-            throw new BusinessException(
-                "No se puede cancelar un apartado ya completado.");
+            throw new BusinessException("No se puede cancelar un apartado ya completado.");
 
-        layaway.Status    = "Cancelled";
+        if (layaway.Status == "Expired")
+            throw new BusinessException("Este apartado ya está vencido.");
+
+        layaway.Status = "Cancelled";
         layaway.UpdatedAt = DateTime.Now;
+        layaway.CompletedAt = DateTime.Now;
 
-        // Revertir inventario
         foreach (var detail in layaway.Details)
         {
             await _inventoryService.ReturnStockAsync(
-                detail.ProductId, detail.Quantity,
-                $"Cancelación apartado {layaway.Folio}", userId);
+                detail.ProductId,
+                detail.Quantity,
+                $"Cancelación apartado {layaway.Folio}",
+                userId);
         }
 
         await _db.SaveChangesAsync();
@@ -241,82 +254,94 @@ public class LayawaysController : ControllerBase
         return Ok(ApiResponse.Ok("Apartado cancelado e inventario revertido."));
     }
 
-    private async Task ExpireLayawaysAsync()
+    [HttpPost("{id}/expire")]
+    [Authorize(Roles = "Admin,Cajero,Supervisor")]
+    public async Task<IActionResult> Expire(int id)
     {
-        var expired = await _db.Layaways
-            .Include(l => l.Details)
-            .Where(l => l.Status == "Pending" && l.ExpiresAt < DateTime.Now)
-            .ToListAsync();
+        var layaway = await GetFull(id);
+        var userId = _currentUser.UserId;
+        var today = DateTime.Now.Date;
 
-        if (!expired.Any()) return;
+        if (layaway.Status == "Completed")
+            throw new BusinessException("No se puede vencer un apartado ya completado.");
 
-        var adminId = await _db.Users
-            .Where(u => u.Role.Name == "Admin" && u.Active)
-            .Select(u => u.Id)
-            .FirstOrDefaultAsync();
+        if (layaway.Status == "Cancelled")
+            throw new BusinessException("Este apartado ya fue cancelado.");
 
-        foreach (var l in expired)
+        if (layaway.Status == "Expired")
+            throw new BusinessException("Este apartado ya está vencido.");
+
+        if (layaway.Status != "Pending")
+            throw new BusinessException("Solo se pueden vencer apartados pendientes.");
+
+        if (layaway.ExpiresAt.Date >= today)
+            throw new BusinessException("El apartado aún no está vencido.");
+
+        layaway.Status = "Expired";
+        layaway.UpdatedAt = DateTime.Now;
+        layaway.CompletedAt = DateTime.Now;
+
+        foreach (var detail in layaway.Details)
         {
-            l.Status    = "Expired";
-            l.UpdatedAt = DateTime.Now;
-
-            // Regresar al inventario
-            foreach (var d in l.Details)
-            {
-                await _inventoryService.ReturnStockAsync(
-                    d.ProductId, d.Quantity, $"Vencimiento apartado {l.Folio}", adminId);
-            }
+            await _inventoryService.ReturnStockAsync(
+                detail.ProductId,
+                detail.Quantity,
+                $"Vencimiento apartado {layaway.Folio}",
+                userId);
         }
+
         await _db.SaveChangesAsync();
+
+        var updated = await GetFull(id);
+
+        return Ok(ApiResponse<LayawayDto>.Ok(
+            ToDto(updated),
+            "Apartado vencido. Productos devueltos al inventario y abonos conservados."));
     }
 
-    // ── Generar venta al liquidar 
-    private async Task GenerateSaleAsync(Layaway layaway, int userId) {
+    private async Task GenerateSaleAsync(Layaway layaway, int userId)
+    {
         var cashRegister = await _db.CashRegisters
             .FirstOrDefaultAsync(cr =>
                 cr.UserId == userId &&
                 cr.Status == CashRegisterStatus.Open);
 
-        if (cashRegister is null) return;
+        if (cashRegister is null)
+            return;
 
-        // Agrupar pagos por método
         var paymentGroups = layaway.Payments
             .GroupBy(p => p.PaymentMethod)
-            .Select(g => new {
+            .Select(g => new
+            {
                 Method = g.Key,
                 Amount = g.Sum(p => p.Amount)
             })
             .ToList();
 
-        // Determinar método principal
-        var isMixed   = paymentGroups.Count > 1;
+        var isMixed = paymentGroups.Count > 1;
+
         var mainMethod = isMixed
             ? PaymentMethod.Mixed
             : paymentGroups.First().Method;
 
-        // Serializar desglose
-        var breakdown = paymentGroups
-            .Select(g => $"{g.Method}:{g.Amount:F2}")
-            .ToList();
         var breakdownJson = string.Join(",",
             paymentGroups.Select(g =>
                 string.Format(
                     System.Globalization.CultureInfo.InvariantCulture,
                     "{0}:{1:F2}",
                     g.Method,
-                    g.Amount
-                )
-            )
-        );
+                    g.Amount)));
 
-        // Folio
-        var prefix    = $"VTA-{DateTimeHelper.Now:yyyyMMdd}-";
+        var prefix = $"VTA-{DateTimeHelper.Now:yyyyMMdd}-";
+
         var lastFolio = await _db.Sales
             .Where(s => s.Folio.StartsWith(prefix))
             .OrderByDescending(s => s.Folio)
             .Select(s => s.Folio)
             .FirstOrDefaultAsync();
+
         int next = 1;
+
         if (lastFolio is not null &&
             int.TryParse(lastFolio.Replace(prefix, ""), out var n))
             next = n + 1;
@@ -339,7 +364,8 @@ public class LayawaysController : ControllerBase
             ExchangeRate = 1,
             Status = SaleStatus.Completed,
             CreatedAt = DateTimeHelper.Now,
-            SaleDetails = layaway.Details.Select(d => new SaleDetail {
+            SaleDetails = layaway.Details.Select(d => new SaleDetail
+            {
                 ProductId = d.ProductId,
                 Quantity = d.Quantity,
                 UnitPrice = d.UnitPrice,
@@ -349,16 +375,19 @@ public class LayawaysController : ControllerBase
         };
 
         _db.Sales.Add(sale);
-        _db.Tickets.Add(new Ticket {
+
+        _db.Tickets.Add(new Ticket
+        {
             Sale = sale,
             Folio = saleFolio,
             CreatedAt = DateTimeHelper.Now
         });
+
         await _db.SaveChangesAsync();
+
         layaway.SaleId = sale.Id;
     }
 
-    // ── Helpers 
     private async Task<Layaway> GetFull(int id) =>
         await _db.Layaways
             .Include(l => l.User)
@@ -371,22 +400,27 @@ public class LayawaysController : ControllerBase
     private async Task<string> GenerateFolioAsync()
     {
         var prefix = $"APT-{DateTime.Now:yyyyMMdd}-";
+
         var last = await _db.Layaways
             .Where(l => l.Folio.StartsWith(prefix))
             .OrderByDescending(l => l.Folio)
             .Select(l => l.Folio)
             .FirstOrDefaultAsync();
+
         int next = 1;
+
         if (last is not null &&
             int.TryParse(last.Replace(prefix, ""), out var n))
             next = n + 1;
+
         return $"{prefix}{next:D4}";
     }
 
     private static LayawayDto ToDto(Layaway l)
     {
-        var now = DateTime.Now;
-        var daysLeft = (int)(l.ExpiresAt - now).TotalDays;
+        var today = DateTime.Now.Date;
+        var expiresDate = l.ExpiresAt.Date;
+        var daysLeft = (expiresDate - today).Days;
 
         return new LayawayDto
         {
@@ -402,10 +436,12 @@ public class LayawaysController : ControllerBase
             SaleId = l.SaleId,
             SaleFolio = l.Sale?.Folio,
             ExpiresAt = l.ExpiresAt,
-            DaysLeft = Math.Max(0, daysLeft),
-            IsExpired = l.Status == "Expired" || daysLeft < 0,
+            DaysLeft = daysLeft,
+            IsExpired =
+            l.Status == "Expired" || (l.Status == "Pending" && expiresDate < today),
             CreatedAt = l.CreatedAt,
             CompletedAt = l.CompletedAt,
+
             Details = l.Details.Select(d => new LayawayDetailDto
             {
                 ProductId = d.ProductId,
@@ -415,6 +451,7 @@ public class LayawaysController : ControllerBase
                 UnitPrice = d.UnitPrice,
                 Subtotal = d.Subtotal
             }).ToList(),
+
             Payments = l.Payments
                 .OrderByDescending(p => p.CreatedAt)
                 .Select(p => new LayawayPaymentDto

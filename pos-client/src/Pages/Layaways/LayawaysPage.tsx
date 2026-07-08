@@ -73,8 +73,15 @@ export default function LayawaysPage() {
         />
       )}
 
-      {detail && (
-        <LayawayDetailModal layaway={detail} onClose={() => setDetail(null)} />
+      {detail && ( <LayawayDetailModal
+        layaway={detail}
+        onClose={() => setDetail(null)}
+        onSuccess={() => {
+            qc.invalidateQueries({ queryKey: ['layaways'] })
+            qc.invalidateQueries({ queryKey: ['dashboard'] })
+            setDetail(null)
+          }}
+        />
       )}
 
       {depositing && (

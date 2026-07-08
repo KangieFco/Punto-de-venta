@@ -10,7 +10,7 @@ type Props = {
   onSuccess: () => void
 }
 
-type FormValues = {
+type CreateLayawayForm = {
   clientName: string
   clientPhone: string
   deposit: string
@@ -25,31 +25,35 @@ export default function CreateLayawayModal({ onClose, onSuccess }: Props) {
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm<FormValues>({
+  } = useForm<CreateLayawayForm>({
     defaultValues: {
+      clientName: '',
+      clientPhone: '',
       deposit: '',
       paymentMethod: 1,
     },
   })
 
   const depositStr = watch('deposit')
-  const deposit = parseFloat(depositStr) || 0
   const paymentMethod = Number(watch('paymentMethod'))
+
+  const deposit = parseFloat(depositStr || '0') || 0
   const remaining = Math.max(0, total - deposit)
   const isFullyPaid = deposit >= total && deposit > 0
 
   const mutation = useMutation({
-    mutationFn: (d: FormValues) =>
+    mutationFn: (d: CreateLayawayForm) =>
       layawaysApi.create({
         clientName: d.clientName.trim(),
         clientPhone: d.clientPhone?.trim() || undefined,
-        deposit: parseFloat(d.deposit) || 0,
+        deposit: parseFloat(d.deposit || '0') || 0,
         paymentMethod: Number(d.paymentMethod),
         items: items.map(i => ({
           productId: i.product.id,
           quantity: i.quantity,
         })),
       }),
+
     onSuccess: res => {
       const data = res.data.data!
       clearCart()
@@ -64,6 +68,7 @@ export default function CreateLayawayModal({ onClose, onSuccess }: Props) {
 
       onSuccess()
     },
+
     onError: (e: any) =>
       toast.error(e.response?.data?.message ?? 'Error al crear apartado'),
   })
@@ -76,7 +81,9 @@ export default function CreateLayawayModal({ onClose, onSuccess }: Props) {
           <p className="font-medium text-gray-600">
             No hay productos en el carrito
           </p>
-          <p className="text-sm mt-1">Agrega productos en el carrito primero.</p>
+          <p className="text-sm mt-1">
+            Agrega productos en el carrito primero.
+          </p>
         </div>
       </Modal>
     )
@@ -93,7 +100,10 @@ export default function CreateLayawayModal({ onClose, onSuccess }: Props) {
 
             <div className="bg-gray-50 rounded-xl p-4 space-y-2.5 max-h-64 overflow-y-auto border border-gray-100">
               {items.map(i => (
-                <div key={i.product.id} className="flex items-center gap-3 text-sm">
+                <div
+                  key={i.product.id}
+                  className="flex items-center gap-3 text-sm"
+                >
                   <div className="w-10 h-10 rounded-xl bg-white border overflow-hidden shrink-0 shadow-sm">
                     {i.product.imageUrl ? (
                       <img
@@ -126,7 +136,9 @@ export default function CreateLayawayModal({ onClose, onSuccess }: Props) {
 
             <div className="flex justify-between font-bold text-gray-900 mt-3 px-1">
               <span>Total del apartado</span>
-              <span className="text-primary-600 text-lg">${total.toFixed(2)}</span>
+              <span className="text-primary-600 text-lg">
+                ${total.toFixed(2)}
+              </span>
             </div>
           </div>
 
@@ -165,7 +177,6 @@ export default function CreateLayawayModal({ onClose, onSuccess }: Props) {
                     { value: 1, label: '💵 Efectivo' },
                     { value: 2, label: '💳 Tarjeta' },
                     { value: 4, label: '🇺🇸 Dólares' },
-                    { value: 3, label: '🔄 Otro' },
                   ].find(m => m.value === paymentMethod)?.label}
                 </span>
               </div>
@@ -190,7 +201,10 @@ export default function CreateLayawayModal({ onClose, onSuccess }: Props) {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit(d => mutation.mutate(d))} className="space-y-5">
+        <form
+          onSubmit={handleSubmit(d => mutation.mutate(d))}
+          className="space-y-5"
+        >
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               👤 Nombre del cliente <span className="text-red-500">*</span>
@@ -230,12 +244,28 @@ export default function CreateLayawayModal({ onClose, onSuccess }: Props) {
             </label>
 
             <input
-              {...register('deposit')}
+              {...register('deposit', {
+                validate: value => {
+                  const n = parseFloat(value || '0')
+
+                  if (Number.isNaN(n)) return 'Cantidad inválida'
+                  if (n < 0) return 'No puede ser negativo'
+                  if (n > total) return 'No puede superar el total'
+
+                  return true
+                },
+              })}
               type="text"
               inputMode="decimal"
-              className="input text-lg font-bold"
+              className="input"
               placeholder="0.00"
             />
+
+            {errors.deposit && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.deposit.message}
+              </p>
+            )}
 
             <p className="text-xs text-gray-400 mt-1">
               Deja en 0 si no hay anticipo
@@ -255,7 +285,9 @@ export default function CreateLayawayModal({ onClose, onSuccess }: Props) {
               ].map(({ value, emoji, name }) => (
                 <label key={value} className="cursor-pointer">
                   <input
-                    {...register('paymentMethod')}
+                    {...register('paymentMethod', {
+                      valueAsNumber: true,
+                    })}
                     type="radio"
                     value={value}
                     className="sr-only peer"
@@ -263,7 +295,9 @@ export default function CreateLayawayModal({ onClose, onSuccess }: Props) {
 
                   <div
                     className={`flex items-center gap-2.5 border-2 rounded-xl px-3 py-2.5 cursor-pointer transition-all peer-checked:border-primary-500 peer-checked:bg-primary-50 hover:border-gray-300 ${
-                      deposit === 0 ? 'border-gray-100 opacity-50' : 'border-gray-200'
+                      deposit === 0
+                        ? 'border-gray-100 opacity-50'
+                        : 'border-gray-200'
                     }`}
                   >
                     <span className="text-xl">{emoji}</span>
@@ -283,7 +317,11 @@ export default function CreateLayawayModal({ onClose, onSuccess }: Props) {
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="btn-secondary flex-1">
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn-secondary flex-1"
+            >
               Cancelar
             </button>
 
