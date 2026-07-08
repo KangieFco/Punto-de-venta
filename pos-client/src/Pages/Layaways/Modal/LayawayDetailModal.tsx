@@ -1,13 +1,35 @@
+import { useMutation } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import type { Layaway } from '../../../api/layaways'
+import { layawaysApi } from '../../../api/layaways'
 import Modal from '../../../components/ui/Modal'
 import { paymentLabel, statusText } from '../../../utils/layawayHelpers'
 
 type Props = {
   layaway: Layaway
   onClose: () => void
+  onSuccess?: () => void
 }
 
-export default function LayawayDetailModal({ layaway, onClose }: Props) {
+export default function LayawayDetailModal({
+  layaway,
+  onClose,
+  onSuccess,
+}: Props) {
+  const expireMutation = useMutation({
+    mutationFn: () => layawaysApi.expire(layaway.id),
+    onSuccess: () => {
+      toast.success('Producto liberado y abonos conservados')
+      onSuccess?.()
+      onClose()
+    },
+    onError: (e: any) =>
+      toast.error(e.response?.data?.message ?? 'Error al liberar apartado'),
+  })
+
+  const canExpire =
+    layaway.status === 'Pending' && layaway.isExpired
+
   const daysLeftColor = layaway.isExpired
     ? 'text-red-600 bg-red-50 border-red-200'
     : layaway.daysLeft <= 7
@@ -31,14 +53,20 @@ export default function LayawayDetailModal({ layaway, onClose }: Props) {
           <div className="bg-gray-50 rounded-xl p-3">
             <p className="text-gray-400 text-xs mb-1">Cliente</p>
             <p className="font-semibold text-gray-900">{layaway.clientName}</p>
+
             {layaway.clientPhone && (
-              <p className="text-gray-500 text-xs mt-0.5">📞 {layaway.clientPhone}</p>
+              <p className="text-gray-500 text-xs mt-0.5">
+                📞 {layaway.clientPhone}
+              </p>
             )}
           </div>
 
           <div className="bg-gray-50 rounded-xl p-3">
             <p className="text-gray-400 text-xs mb-1">Estado</p>
-            <p className="font-semibold text-gray-900">{statusText(layaway.status)}</p>
+            <p className="font-semibold text-gray-900">
+              {statusText(layaway.status)}
+            </p>
+
             {layaway.saleFolio && (
               <p className="text-xs text-primary-600 mt-1 font-mono">
                 Venta: {layaway.saleFolio}
@@ -68,10 +96,18 @@ export default function LayawayDetailModal({ layaway, onClose }: Props) {
           <table className="w-full text-sm border rounded-xl overflow-hidden">
             <thead className="bg-gray-50">
               <tr>
-                <th className="text-left px-4 py-2 font-medium text-gray-600">Producto</th>
-                <th className="text-right px-4 py-2 font-medium text-gray-600">Cant.</th>
-                <th className="text-right px-4 py-2 font-medium text-gray-600">P. Unit.</th>
-                <th className="text-right px-4 py-2 font-medium text-gray-600">Subtotal</th>
+                <th className="text-left px-4 py-2 font-medium text-gray-600">
+                  Producto
+                </th>
+                <th className="text-right px-4 py-2 font-medium text-gray-600">
+                  Cant.
+                </th>
+                <th className="text-right px-4 py-2 font-medium text-gray-600">
+                  P. Unit.
+                </th>
+                <th className="text-right px-4 py-2 font-medium text-gray-600">
+                  Subtotal
+                </th>
               </tr>
             </thead>
 
@@ -93,10 +129,14 @@ export default function LayawayDetailModal({ layaway, onClose }: Props) {
                       )}
                     </div>
 
-                    <span className="font-medium text-gray-900">{d.productName}</span>
+                    <span className="font-medium text-gray-900">
+                      {d.productName}
+                    </span>
                   </td>
 
-                  <td className="px-4 py-2.5 text-right text-gray-700">{d.quantity}</td>
+                  <td className="px-4 py-2.5 text-right text-gray-700">
+                    {d.quantity}
+                  </td>
 
                   <td className="px-4 py-2.5 text-right text-gray-700">
                     ${d.unitPrice.toFixed(2)}
@@ -223,13 +263,36 @@ export default function LayawayDetailModal({ layaway, onClose }: Props) {
 
           {layaway.completedAt && (
             <p>
-              Completado:{' '}
+              Cerrado:{' '}
               <span className="text-gray-600 font-medium">
                 {new Date(layaway.completedAt).toLocaleString('es-MX')}
               </span>
             </p>
           )}
         </div>
+
+        {canExpire && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+            <p className="text-sm font-semibold text-red-700">
+              Este apartado ya está vencido
+            </p>
+
+            <p className="text-xs text-red-500 mt-1">
+              Al liberarlo, los productos regresan al inventario y los abonos se conservan en el historial.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => expireMutation.mutate()}
+              disabled={expireMutation.isPending}
+              className="mt-3 w-full bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl px-4 py-2 disabled:opacity-50"
+            >
+              {expireMutation.isPending
+                ? 'Liberando...'
+                : 'Liberar producto por vencimiento'}
+            </button>
+          </div>
+        )}
       </div>
     </Modal>
   )
