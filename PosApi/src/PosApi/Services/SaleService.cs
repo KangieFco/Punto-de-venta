@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using PosApi.Common.Exceptions;
 using PosApi.Data;
+using PosApi.Common;
 using PosApi.Domain.Entities;
 using PosApi.Domain.Enums;
 using PosApi.DTOs.Sales;
@@ -149,7 +150,7 @@ foreach (var payment in request.Payments)
     var paymentMethod =
         request.Payments.Count == 1
             ? request.Payments.First().Method
-            : PaymentMethod.Other;
+            : PaymentMethod.Mixed;
 
     var paymentBreakdown = string.Join(",",
         request.Payments.Select(p =>
@@ -182,7 +183,7 @@ foreach (var payment in request.Payments)
             ChangeAmount = realChange,
             ExchangeRate = exchangeRate,
             Status = SaleStatus.Completed,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = DateTimeHelper.Now,
             SaleDetails = details
         };
 
@@ -200,7 +201,7 @@ foreach (var payment in request.Payments)
             Sale = sale,
             Folio = folio,
             PrintedCount = 0,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTimeHelper.Now
         });
 
         await _db.SaveChangesAsync();
@@ -219,7 +220,7 @@ foreach (var payment in request.Payments)
 
         sale.Status = SaleStatus.Cancelled;
         sale.CancelledByUserId = userId;
-        sale.CancelledAt = DateTime.UtcNow;
+        sale.CancelledAt = DateTimeHelper.Now;
         sale.CancellationReason = request.Reason;
         foreach (var detail in sale.SaleDetails)
         {
@@ -272,7 +273,7 @@ foreach (var payment in request.Payments)
     private async Task<string> GenerateFolioAsync()
     {
         // Formato: VTA-20260528-0001
-        var today = DateTime.UtcNow.ToString("yyyyMMdd");
+        var today = DateTimeHelper.Now.ToString("yyyyMMdd");
         var prefix = $"VTA-{today}-";
 
         var lastFolio = await _db.Sales

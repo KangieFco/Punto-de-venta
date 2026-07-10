@@ -6,8 +6,9 @@ import { salesApi, type Sale } from '../../api/sales'
 import { productsApi, type Product } from '../../api/products'
 import { cashRegistersApi, type CashRegister } from '../../api/cashRegisters'
 import { layawaysApi, type Layaway } from '../../api/layaways'
-import { inventoryApi } from '../../api/inventory'
 import { SalesLast7DaysChart, PaymentMethodsChart, TopProductsChart } from '../../components/dashboard/SalesLast7DaysChart'
+import { getLocalDateKey } from '../../utils/date'
+
 
 export default function DashboardPage() {
   const { user } = useAuthStore()
@@ -16,6 +17,7 @@ export default function DashboardPage() {
   const [cashRegister, setCashRegister] = useState<CashRegister | null>(null)
   const [layaways, setLayaways] = useState<Layaway[]>([])
   const [loading, setLoading] = useState(true)
+  const TIME_ZONE = 'America/Chihuahua'
 
   useEffect(() => {
     loadDashboard()
@@ -35,7 +37,6 @@ export default function DashboardPage() {
           productsApi.getAll(true),
           cashRegistersApi.getCurrent(),
           layawaysApi.getAll(),
-          inventoryApi.getMovements(),
         ])
 
       setSales(getData<Sale[]>(salesRes))
@@ -47,21 +48,21 @@ export default function DashboardPage() {
     }
   }
 
-  const today = new Date().toDateString()
+  const todayKey = getLocalDateKey(new Date())
 
   const completedSalesToday = useMemo(() => {
     return sales.filter(s => {
-      const sameDay = new Date(s.createdAt).toDateString() === today
+      const saleDateKey = getLocalDateKey(s.createdAt)
       const status = s.status?.toLowerCase()
 
       return (
-        sameDay &&
+        saleDateKey === todayKey &&
         status !== 'cancelled' &&
         status !== 'cancelada' &&
         status !== 'canceled'
       )
     })
-  }, [sales, today])
+  }, [sales, todayKey])
 
   const totalSalesToday = completedSalesToday.reduce(
     (sum, s) => sum + toNumber(s.total),
@@ -129,8 +130,9 @@ export default function DashboardPage() {
       date.setDate(date.getDate() - (6 - i))
 
       return {
-        date,
+        key: getLocalDateKey(date),
         label: date.toLocaleDateString('es-MX', {
+          timeZone: TIME_ZONE,
           weekday: 'short',
         }),
         total: 0,
@@ -138,7 +140,6 @@ export default function DashboardPage() {
     })
 
     sales.forEach(sale => {
-      const saleDate = new Date(sale.createdAt)
       const status = sale.status?.toLowerCase()
 
       if (
@@ -149,9 +150,8 @@ export default function DashboardPage() {
         return
       }
 
-      const day = days.find(
-        d => d.date.toDateString() === saleDate.toDateString()
-      )
+      const saleDateKey = getLocalDateKey(sale.createdAt)
+      const day = days.find(d => d.key === saleDateKey)
 
       if (day) {
         day.total += toNumber(sale.total)
