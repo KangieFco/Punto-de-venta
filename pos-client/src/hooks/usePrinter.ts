@@ -1,52 +1,163 @@
-import { useState} from 'react'
-import { getPrinters, printTicket} from '../utils/qzTray'
-import toast from 'react-hot-toast'
+import { useCallback, useEffect, useState } from 'react'
+import qz from 'qz-tray'
 
-const PRINTER_KEY = 'pos_printer'
+const PRINTER_STORAGE_KEY = 'pos-selected-printer'
 
 export function usePrinter() {
-  const [printers,  setPrinters]  = useState<string[]>([])
-  const [selected,  setSelected]  = useState<string>(
-    localStorage.getItem(PRINTER_KEY) ?? ''
-  )
-  const [connected, setConnected] = useState(false)
-  const [loading,   setLoading]   = useState(false)
+  const [printers, setPrinters] = useState<string[]>([])
 
-  const connect = async () => {
-    setLoading(true)
+  const [selectedPrinter, setSelectedPrinterState] =
+    useState<string>(() => {
+      return (
+        localStorage.getItem(PRINTER_STORAGE_KEY) ?? ''
+      )
+    })
+
+  const [isLoadingPrinters, setIsLoadingPrinters] =
+    useState(false)
+
+  const connect = useCallback(async () => {
+    if (qz.websocket.isActive()) {
+      return
+    }
+
     try {
-      const list = await getPrinters()
-      setPrinters(list)
-      setConnected(true)
-      if (!selected && list.length > 0) {
-        setSelected(list[0])
-        localStorage.setItem(PRINTER_KEY, list[0])
-      }
-    } catch {
-      toast.error('No se pudo conectar con QZ Tray. ¿Está instalado y corriendo?')
+      await qz.websocket.connect()
+    } catch (error) {
+      console.error(
+        'No se pudo conectar con QZ Tray:',
+        error,
+      )
+
+      throw new Error(
+        'No se pudo conectar con QZ Tray. Verifica que esté abierto.',
+      )
+    }
+  }, [])
+
+  const refreshPrinters = useCallback(async () => {
+    setIsLoadingPrinters(true)
+
+    try {
+      await connect()
+
+      const result = await qz.printers.find()
+
+      const printerList = Array.isArray(result)
+        ? result
+        : result
+          ? [result]
+          : []
+
+      setPrinters(printerList)
+
+      setSelectedPrinterState(currentPrinter => {
+        if (
+          currentPrinter &&
+          printerList.includes(currentPrinter)
+        ) {
+          return currentPrinter
+        }
+
+        const savedPrinter =
+          localStorage.getItem(
+            PRINTER_STORAGE_KEY,
+          )
+
+        if (
+          savedPrinter &&
+          printerList.includes(savedPrinter)
+        ) {
+          return savedPrinter
+        }
+
+        if (printerList.length === 1) {
+          const onlyPrinter = printerList[0]
+
+          localStorage.setItem(
+            PRINTER_STORAGE_KEY,
+            onlyPrinter,
+          )
+
+          return onlyPrinter
+        }
+
+        return ''
+      })
+    } catch (error) {
+      console.error(
+        'No se pudieron obtener las impresoras:',
+        error,
+      )
+
+      setPrinters([])
     } finally {
-      setLoading(false)
+      setIsLoadingPrinters(false)
     }
-  }
+  }, [connect])
 
-  const selectPrinter = (name: string) => {
-    setSelected(name)
-    localStorage.setItem(PRINTER_KEY, name)
-  }
+  const setSelectedPrinter = useCallback(
+    (printerName: string) => {
+      setSelectedPrinterState(printerName)
 
-  const print = async (ticketText: string) => {
-    if (!selected) {
-      toast.error('Selecciona una impresora primero')
-      return false
-    }
-    try {
-      await printTicket(selected, ticketText)
-      return true
-    } catch (err: any) {
-      toast.error('Error al imprimir: ' + (err.message ?? 'desconocido'))
-      return false
-    }
-  }
+      if (printerName) {
+        localStorage.setItem(
+          PRINTER_STORAGE_KEY,
+          printerName,
+        )
+      } else {
+        localStorage.removeItem(
+          PRINTER_STORAGE_KEY,
+        )
+      }
+    },
+    [],
+  )
 
-  return { printers, selected, connected, loading, connect, selectPrinter, print }
+  const print = useCallback(
+    async (ticketText: string) => {
+      if (!ticketText.trim()) {
+        throw new Error(
+          'El ticket no contiene información para imprimir.',
+        )
+      }
+
+      if (!selectedPrinter) {
+        throw new Error(
+          'Selecciona una impresora antes de cobrar.',
+        )
+      }
+
+      await connect()
+
+      const config = qz.configs.create(
+        selectedPrinter,
+        {
+          encoding: 'UTF-8',
+        },
+      )
+
+      await qz.print(config, [
+        {
+          type: 'raw',
+          format: 'plain',
+          data: ticketText,
+        },
+      ])
+    },
+    [connect, selectedPrinter],
+  )
+
+  useEffect(() => {
+    void refreshPrinters()
+  }, [refreshPrinters])
+
+  return {
+    print,
+    printers,
+    selectedPrinter,
+    setSelectedPrinter,
+    isLoadingPrinters,
+    refreshPrinters,
+  }
 }
