@@ -162,10 +162,6 @@ public class TicketService : ITicketService
             foreach (var line in storeMsg.Split('\n')) { sb.AppendLine(Center(line.Trim(), width));}
             sb.AppendLine();
             sb.AppendLine();
-            sb.AppendLine();
-            sb.AppendLine();
-            sb.AppendLine();
-            sb.AppendLine();
 
             return sb.ToString();
         }

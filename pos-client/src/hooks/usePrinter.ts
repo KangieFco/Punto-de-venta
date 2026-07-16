@@ -157,7 +157,7 @@ export function usePrinter() {
       `${window.location.origin}/logo.png`
 
     const printableTicket =
-      `${ticketText}\n\n\n\n`
+      `${ticketText}\n\n\n`
 
     await qz.print(config, [
       {
