@@ -1,121 +1,128 @@
 import { useCallback, useEffect, useState } from 'react'
 import qz from 'qz-tray'
+import { connectQz } from '../utils/qzTray'
 
-const PRINTER_STORAGE_KEY = 'pos-selected-printer'
+const PRINTER_STORAGE_KEY =
+  'pos-selected-printer'
 
 export function usePrinter() {
-  const [printers, setPrinters] = useState<string[]>([])
+  const [printers, setPrinters] =
+    useState<string[]>([])
 
-  const [selectedPrinter, setSelectedPrinterState] =
-    useState<string>(() => {
-      return (
-        localStorage.getItem(PRINTER_STORAGE_KEY) ?? ''
-      )
-    })
+  const [
+    selectedPrinter,
+    setSelectedPrinterState,
+  ] = useState<string>(() => {
+    return (
+      localStorage.getItem(
+        PRINTER_STORAGE_KEY,
+      ) ?? ''
+    )
+  })
 
-  const [isLoadingPrinters, setIsLoadingPrinters] =
-    useState(false)
+  const [
+    isLoadingPrinters,
+    setIsLoadingPrinters,
+  ] = useState(false)
 
-  const connect = useCallback(async () => {
-    if (qz.websocket.isActive()) {
-      return
-    }
+  const refreshPrinters =
+    useCallback(async (): Promise<void> => {
+      setIsLoadingPrinters(true)
 
-    try {
-      await qz.websocket.connect()
-    } catch (error) {
-      console.error(
-        'No se pudo conectar con QZ Tray:',
-        error,
-      )
+      try {
+        await connectQz()
 
-      throw new Error(
-        'No se pudo conectar con QZ Tray. Verifica que esté abierto.',
-      )
-    }
-  }, [])
+        const result =
+          await qz.printers.find()
 
-  const refreshPrinters = useCallback(async () => {
-    setIsLoadingPrinters(true)
+        const printerList: string[] =
+          Array.isArray(result)
+            ? result
+            : result
+              ? [result]
+              : []
 
-    try {
-      await connect()
+        setPrinters(printerList)
 
-      const result = await qz.printers.find()
+        setSelectedPrinterState(
+          currentPrinter => {
+            if (
+              currentPrinter &&
+              printerList.includes(
+                currentPrinter,
+              )
+            ) {
+              return currentPrinter
+            }
 
-      const printerList = Array.isArray(result)
-        ? result
-        : result
-          ? [result]
-          : []
+            const savedPrinter =
+              localStorage.getItem(
+                PRINTER_STORAGE_KEY,
+              )
 
-      setPrinters(printerList)
+            if (
+              savedPrinter &&
+              printerList.includes(
+                savedPrinter,
+              )
+            ) {
+              return savedPrinter
+            }
 
-      setSelectedPrinterState(currentPrinter => {
-        if (
-          currentPrinter &&
-          printerList.includes(currentPrinter)
-        ) {
-          return currentPrinter
-        }
+            if (
+              printerList.length === 1
+            ) {
+              const onlyPrinter =
+                printerList[0]
 
-        const savedPrinter =
-          localStorage.getItem(
-            PRINTER_STORAGE_KEY,
-          )
+              localStorage.setItem(
+                PRINTER_STORAGE_KEY,
+                onlyPrinter,
+              )
 
-        if (
-          savedPrinter &&
-          printerList.includes(savedPrinter)
-        ) {
-          return savedPrinter
-        }
+              return onlyPrinter
+            }
 
-        if (printerList.length === 1) {
-          const onlyPrinter = printerList[0]
+            return ''
+          },
+        )
+      } catch (error) {
+        console.error(
+          'No se pudieron obtener las impresoras:',
+          error,
+        )
 
-          localStorage.setItem(
-            PRINTER_STORAGE_KEY,
-            onlyPrinter,
-          )
+        setPrinters([])
+      } finally {
+        setIsLoadingPrinters(false)
+      }
+    }, [])
 
-          return onlyPrinter
-        }
-
-        return ''
-      })
-    } catch (error) {
-      console.error(
-        'No se pudieron obtener las impresoras:',
-        error,
-      )
-
-      setPrinters([])
-    } finally {
-      setIsLoadingPrinters(false)
-    }
-  }, [connect])
-
-  const setSelectedPrinter = useCallback(
-    (printerName: string) => {
-      setSelectedPrinterState(printerName)
-
-      if (printerName) {
-        localStorage.setItem(
-          PRINTER_STORAGE_KEY,
+  const setSelectedPrinter =
+    useCallback(
+      (printerName: string): void => {
+        setSelectedPrinterState(
           printerName,
         )
-      } else {
-        localStorage.removeItem(
-          PRINTER_STORAGE_KEY,
-        )
-      }
-    },
-    [],
-  )
+
+        if (printerName) {
+          localStorage.setItem(
+            PRINTER_STORAGE_KEY,
+            printerName,
+          )
+        } else {
+          localStorage.removeItem(
+            PRINTER_STORAGE_KEY,
+          )
+        }
+      },
+      [],
+    )
 
   const print = useCallback(
-    async (ticketText: string) => {
+    async (
+      ticketText: string,
+    ): Promise<void> => {
       if (!ticketText.trim()) {
         throw new Error(
           'El ticket no contiene información para imprimir.',
@@ -128,24 +135,39 @@ export function usePrinter() {
         )
       }
 
-      await connect()
+      await connectQz()
 
       const config = qz.configs.create(
         selectedPrinter,
         {
-          encoding: 'UTF-8',
+          encoding: 'CP850',
+          copies: 1,
+          jobName: 'Ticket de venta',
         },
       )
+
+      /*
+       * Agrega avance suficiente para que
+       * el mensaje final quede fuera del
+       * borde del cortador.
+       *
+       * GS V 0 intenta realizar corte
+       * completo en impresoras compatibles.
+       */
+      const printableTicket =
+        ticketText +
+        '\n\n\n\n\n\n' +
+        '\x1D\x56\x00'
 
       await qz.print(config, [
         {
           type: 'raw',
           format: 'plain',
-          data: ticketText,
+          data: printableTicket,
         },
       ])
     },
-    [connect, selectedPrinter],
+    [selectedPrinter],
   )
 
   useEffect(() => {

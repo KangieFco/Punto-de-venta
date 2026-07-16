@@ -23,3 +23,8 @@ backups/
 
 # Imágenes subidas por usuarios/clientes
 PosApi/src/PosApi/wwwroot/images/products/
+
+# Claves privadas QZ Tray
+**/QzCertificates/private-key.pem
+**/QzCertificates/*.pfx
+secrets/
