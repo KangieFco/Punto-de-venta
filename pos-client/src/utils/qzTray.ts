@@ -1,23 +1,93 @@
 import qz from 'qz-tray'
+import client from '../api/client'
 
 let connectionPromise: Promise<void> | null = null
 
-type QzCertificateResolver = (certificate: string) => void
-type QzSignatureResolver = (signature: string) => void
+type CertificateResolver = (
+  certificate: string,
+) => void
+
+type CertificateRejecter = (
+  error: unknown,
+) => void
+
+type SignatureResolver = (
+  signature: string,
+) => void
+
+type SignatureRejecter = (
+  error: unknown,
+) => void
+
+interface SignatureResponse {
+  success: boolean
+  data?: {
+    signature: string
+  }
+  message?: string
+}
 
 qz.security.setCertificatePromise(
-  (resolve: QzCertificateResolver): void => {
-    resolve('')
+  (
+    resolve: CertificateResolver,
+    reject: CertificateRejecter,
+  ): void => {
+    client
+      .get<string>('/qz/certificate', {
+        responseType: 'text',
+      })
+      .then(response => {
+        resolve(response.data)
+      })
+      .catch(error => {
+        console.error(
+          'No se pudo obtener el certificado de QZ:',
+          error,
+        )
+
+        reject(error)
+      })
   },
 )
 
 qz.security.setSignatureAlgorithm('SHA512')
 
-qz.security.setSignaturePromise(() => {
-  return (resolve: QzSignatureResolver): void => {
-    resolve('')
-  }
-})
+qz.security.setSignaturePromise(
+  (toSign: string) => {
+    return (
+      resolve: SignatureResolver,
+      reject: SignatureRejecter,
+    ): void => {
+      client
+        .post<SignatureResponse>(
+          '/qz/sign',
+          {
+            request: toSign,
+          },
+        )
+        .then(response => {
+          const signature =
+            response.data.data?.signature
+
+          if (!signature) {
+            throw new Error(
+              'El backend no devolvió la firma de QZ.',
+            )
+          }
+
+          resolve(signature)
+        })
+        .catch(error => {
+          console.error(
+            'No se pudo firmar la solicitud de QZ:',
+            error,
+          )
+
+          reject(error)
+        })
+    }
+  },
+)
 
 export async function connectQz(): Promise<void> {
   if (qz.websocket.isActive()) {
@@ -37,52 +107,6 @@ export async function connectQz(): Promise<void> {
   }
 
   await connectionPromise
-}
-
-export async function getDefaultPrinter(): Promise<string> {
-  await connectQz()
-
-  const result = await qz.printers.find()
-
-  const printers: string[] = Array.isArray(result)
-    ? result
-    : result
-      ? [result]
-      : []
-
-  if (printers.length === 0) {
-    throw new Error('No se encontraron impresoras instaladas.')
-  }
-
-  const thermalPrinter = printers.find((printer: string): boolean => {
-    const name = printer.toLowerCase()
-
-    return (
-      name.includes('pos') ||
-      name.includes('thermal') ||
-      name.includes('receipt') ||
-      name.includes('ticket') ||
-      name.includes('80') ||
-      name.includes('58')
-    )
-  })
-
-  return thermalPrinter ?? printers[0]
-}
-
-export async function printTicket(
-  printerName: string,
-  ticketData: string[],
-): Promise<void> {
-  await connectQz()
-
-  const config = qz.configs.create(printerName, {
-    encoding: 'UTF-8',
-    copies: 1,
-    jobName: 'Ticket de venta',
-  })
-
-  await qz.print(config, ticketData)
 }
 
 export async function disconnectQz(): Promise<void> {
