@@ -120,55 +120,48 @@ export function usePrinter() {
     )
 
   const print = useCallback(
-    async (
-      ticketText: string,
-    ): Promise<void> => {
-      if (!ticketText.trim()) {
-        throw new Error(
-          'El ticket no contiene información para imprimir.',
-        )
-      }
-
-      if (!selectedPrinter) {
-        throw new Error(
-          'Selecciona una impresora antes de cobrar.',
-        )
-      }
-
-      await connectQz()
-
-      const config = qz.configs.create(
-        selectedPrinter,
-        {
-          encoding: 'CP850',
-          copies: 1,
-          jobName: 'Ticket de venta',
-        },
+  async (ticketText: string) => {
+    if (!ticketText.trim()) {
+      throw new Error(
+        'El ticket no contiene información para imprimir.',
       )
+    }
 
-      /*
-       * Agrega avance suficiente para que
-       * el mensaje final quede fuera del
-       * borde del cortador.
-       *
-       * GS V 0 intenta realizar corte
-       * completo en impresoras compatibles.
-       */
-      const printableTicket =
-        ticketText +
-        '\n\n\n\n\n\n' +
-        '\x1D\x56\x00'
+    const printerName =
+      selectedPrinter ||
+      localStorage.getItem(PRINTER_STORAGE_KEY) ||
+      ''
 
-      await qz.print(config, [
-        {
-          type: 'raw',
-          format: 'plain',
-          data: printableTicket,
-        },
-      ])
-    },
-    [selectedPrinter],
-  )
+    if (!printerName) {
+      throw new Error(
+        'Selecciona una impresora antes de cobrar.',
+      )
+    }
+
+    await connectQz()
+
+    const config = qz.configs.create(
+      printerName,
+      {
+        encoding: 'CP850',
+        copies: 1,
+        jobName: 'Ticket de venta',
+      },
+    )
+
+    const printableTicket =
+      `${ticketText}\n\n\n\n\n\n`
+
+    await qz.print(config, [
+      {
+        type: 'raw',
+        format: 'plain',
+        data: printableTicket,
+      },
+    ])
+  },
+  [selectedPrinter],
+)
 
   useEffect(() => {
     void refreshPrinters()

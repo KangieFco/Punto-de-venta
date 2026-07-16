@@ -1,31 +1,31 @@
-import { useState }                         from 'react'
-import { useMutation, useQueryClient }      from '@tanstack/react-query'
-import { useForm, useWatch }                from 'react-hook-form'
-import toast                                from 'react-hot-toast'
-import Modal                                from '../../components/ui/Modal'
-import { salesApi }                         from '../../api/sales'
-import { ticketsApi }                       from '../../api/tickets'
-import { useCartStore }                     from '../../store/cartStore'
-import { usePrinter }                       from '../../hooks/usePrinter'
+import { useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useForm, useWatch } from 'react-hook-form'
+import toast from 'react-hot-toast'
+import Modal from '../../components/ui/Modal'
+import { salesApi } from '../../api/sales'
+import { ticketsApi } from '../../api/tickets'
+import { useCartStore } from '../../store/cartStore'
+import { usePrinter } from '../../hooks/usePrinter'
 
 interface Props {
   cashRegisterId: number
-  onClose:        () => void
+  onClose: () => void
 }
 
 interface PaymentForm {
   paymentMethod:  number
   amountReceived: number
-  cash:           number
-  card:           number
-  dollars:        number
-  exchangeRate:   number
+  cash: number
+  card: number
+  dollars: number
+  exchangeRate: number
 }
 
 const PAYMENT_METHOD = {
-  CASH:   1,
-  CARD:   2,
-  OTHER:  3,
+  CASH: 1,
+  CARD: 2,
+  OTHER: 3,
   DOLLAR: 4,
 } as const
 
@@ -39,7 +39,7 @@ const METHODS = [
 export default function PaymentModal({ cashRegisterId, onClose }: Props) {
   const queryClient = useQueryClient()
   const { items, total, globalDiscount, subtotal, clearCart } = useCartStore()
-  const { print, selectedPrinter } = usePrinter()
+  const { print } = usePrinter()
 
   const [saleComplete, setSaleComplete] = useState<{
     folio:         string
@@ -52,32 +52,28 @@ export default function PaymentModal({ cashRegisterId, onClose }: Props) {
       defaultValues: {
         paymentMethod:  PAYMENT_METHOD.CASH,
         amountReceived: undefined as unknown as number,
-        cash:           undefined as unknown as number,
-        card:           undefined as unknown as number,
-        dollars:        undefined as unknown as number,
+        cash: undefined as unknown as number,
+        card: undefined as unknown as number,
+        dollars: undefined as unknown as number,
         exchangeRate:   17,
       },
     })
 
   // ── Watchers ───────────────────────────────────────────────
-  const method       = Number(useWatch({ control, name: 'paymentMethod'  }) || PAYMENT_METHOD.CASH)
-  const received     = Number(useWatch({ control, name: 'amountReceived' }) || 0)
-  const cash         = Number(useWatch({ control, name: 'cash'           }) || 0)
-  const card         = Number(useWatch({ control, name: 'card'           }) || 0)
-  const dollars      = Number(useWatch({ control, name: 'dollars'        }) || 0)
-  const exchangeRate = Number(useWatch({ control, name: 'exchangeRate'   }) || 1)
-
+  const method = Number(useWatch({ control, name: 'paymentMethod' }) || PAYMENT_METHOD.CASH)
+  const received = Number(useWatch({ control, name: 'amountReceived' }) || 0)
+  const cash = Number(useWatch({ control, name: 'cash' }) || 0)
+  const card = Number(useWatch({ control, name: 'card' }) || 0)
+  const dollars = Number(useWatch({ control, name: 'dollars' }) || 0)
+  const exchangeRate = Number(useWatch({ control, name: 'exchangeRate' }) || 1)
   const isDollar = method === PAYMENT_METHOD.DOLLAR
   const isMixed  = method === PAYMENT_METHOD.OTHER
-
   const dollarsInPesos  = dollars * exchangeRate
-
   const receivedInPesos = isMixed
     ? cash + card + dollarsInPesos
     : isDollar
       ? received * exchangeRate
       : received
-
   const missing = total - receivedInPesos
 
   // Cálculo de cambio correcto
@@ -92,8 +88,8 @@ export default function PaymentModal({ cashRegisterId, onClose }: Props) {
       : method === PAYMENT_METHOD.CASH ? received : 0
 
   const cashNeededAfterCard = Math.max(0, total - nonCashPaid)
-  const change              = Math.max(0, cashLikePaid - cashNeededAfterCard)
-  const changeDollars       = isDollar && change > 0 ? change / exchangeRate : 0
+  const change = Math.max(0, cashLikePaid - cashNeededAfterCard)
+  const changeDollars = isDollar && change > 0 ? change / exchangeRate : 0
 
   const hasPayment = isMixed
     ? cash > 0 || card > 0 || dollars > 0
@@ -113,26 +109,26 @@ export default function PaymentModal({ cashRegisterId, onClose }: Props) {
       const rate          = Number(data.exchangeRate || 1)
 
       const payments: {
-        method:       number
-        amount:       number
+        method: number
+        amount: number
         exchangeRate: number
       }[] = []
 
       if (paymentMethod === PAYMENT_METHOD.OTHER) {
-        const cashAmt   = Number(data.cash    || 0)
-        const cardAmt   = Number(data.card    || 0)
+        const cashAmt = Number(data.cash    || 0)
+        const cardAmt = Number(data.card    || 0)
         const dollarAmt = Number(data.dollars || 0)
 
         if (cashAmt > 0)
-          payments.push({ method: PAYMENT_METHOD.CASH,   amount: cashAmt,   exchangeRate: 1    })
+          payments.push({ method: PAYMENT_METHOD.CASH, amount: cashAmt,   exchangeRate: 1    })
         if (cardAmt > 0)
-          payments.push({ method: PAYMENT_METHOD.CARD,   amount: cardAmt,   exchangeRate: 1    })
+          payments.push({ method: PAYMENT_METHOD.CARD, amount: cardAmt,   exchangeRate: 1    })
         if (dollarAmt > 0)
           payments.push({ method: PAYMENT_METHOD.DOLLAR, amount: dollarAmt, exchangeRate: rate })
       } else {
         payments.push({
-          method:       paymentMethod,
-          amount:       Number(data.amountReceived || 0),
+          method: paymentMethod,
+          amount: Number(data.amountReceived || 0),
           exchangeRate: paymentMethod === PAYMENT_METHOD.DOLLAR ? rate : 1,
         })
       }
@@ -167,12 +163,12 @@ export default function PaymentModal({ cashRegisterId, onClose }: Props) {
           const printRes    = await ticketsApi.print(ticket.id)
           const ticketText  = printRes.data.data?.ticketText
 
-          if (ticketText && selectedPrinter) {
+          if (ticketText) {
             await print(ticketText)
-          } else if (!selectedPrinter) {
-            toast('Sin impresora seleccionada — ticket no impreso', {
-              icon: '🖨️', duration: 3000,
-            })
+          } else {
+            throw new Error(
+              'El servidor no generó el contenido del ticket.',
+            )
           }
         }
       } catch (printError) {
@@ -228,8 +224,7 @@ export default function PaymentModal({ cashRegisterId, onClose }: Props) {
           </div>
 
           {saleComplete.change > 0 ? (
-            <div className="space-y-1 rounded-2xl border border-green-200
-                            bg-green-50 p-5">
+            <div className="space-y-1 rounded-2xl border border-green-200 bg-green-50 p-5">
               <p className="text-sm font-medium text-green-600">
                 Cambio a entregar
               </p>
