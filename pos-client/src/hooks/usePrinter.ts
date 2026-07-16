@@ -124,64 +124,63 @@ export function usePrinter() {
     )
 
   const print = useCallback(
-    async (ticketText: string) => {
-      if (!ticketText.trim()) {
-        throw new Error(
-          'El ticket no contiene información para imprimir.',
-        )
-      }
-
-      const printerName =
-        selectedPrinter ||
-        localStorage.getItem(
-          PRINTER_STORAGE_KEY,
-        ) ||
-        ''
-
-      if (!printerName) {
-        throw new Error(
-          'Selecciona una impresora antes de cobrar.',
-        )
-      }
-
-      await connectQz()
-
-      const config = qz.configs.create(
-        printerName,
-        {
-          encoding: 'CP850',
-          copies: 1,
-          jobName: 'Ticket de venta',
-        },
+  async (ticketText: string) => {
+    if (!ticketText.trim()) {
+      throw new Error(
+        'El ticket no contiene información para imprimir.',
       )
+    }
 
-      const logoUrl =
-        `${window.location.origin}/mineros.png`
+    const printerName =
+      selectedPrinter ||
+      localStorage.getItem(PRINTER_STORAGE_KEY) ||
+      ''
 
-      const printableTicket =
-        `${ticketText}\n\n\n\n`
+    if (!printerName) {
+      throw new Error(
+        'Selecciona una impresora antes de cobrar.',
+      )
+    }
 
-      await qz.print(config, [
-        {
-          type: 'raw',
-          format: 'image',
-          flavor: 'file',
-          data: logoUrl,
-          options: {
-            language: 'ESCPOS',
-            dotDensity: 'double',
-            pageWidth: 384,
-          },
+    await connectQz()
+
+    const config = qz.configs.create(
+      printerName,
+      {
+        encoding: 'CP850',
+        copies: 1,
+        jobName: 'Ticket de venta',
+      },
+    )
+
+    const logoUrl =
+      `${window.location.origin}/logo.png`
+
+    const printableTicket =
+      `${ticketText}\n\n\n\n\n\n`
+
+    await qz.print(config, [
+      {
+        type: 'raw',
+        format: 'image',
+        flavor: 'file',
+        data: logoUrl,
+        options: {
+          language: 'ESCPOS',
+          dotDensity: 'double',
+          pageWidth: 384,
         },
-        {
-          type: 'raw',
-          format: 'plain',
-          data: printableTicket,
-        },
-      ])
-    },
-    [selectedPrinter],
-  )
+      },
+      {
+        type: 'raw',
+        format: 'command',
+        flavor: 'plain',
+        data: printableTicket,
+      },
+    ])
+  },
+  [selectedPrinter],
+)
 
   useEffect(() => {
     void refreshPrinters()
