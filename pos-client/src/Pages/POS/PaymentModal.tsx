@@ -214,10 +214,17 @@ export default function PaymentModal({ cashRegisterId, onClose }: Props) {
     return (
       <Modal title="Venta completada" onClose={onClose} size="sm">
         <div className="space-y-5 py-2 text-center">
-          <div className="text-6xl">🎉</div>
+          <img
+            src="/mineros.png"
+            alt="Mineros de Parral"
+            className="mx-auto h-28 w-28 object-contain"
+          />
 
           <div>
-            <p className="text-sm text-gray-400">Folio</p>
+            <p className="text-sm text-gray-400">
+              Folio
+            </p>
+
             <p className="text-2xl font-black text-gray-900">
               {saleComplete.folio}
             </p>
@@ -228,22 +235,27 @@ export default function PaymentModal({ cashRegisterId, onClose }: Props) {
               <p className="text-sm font-medium text-green-600">
                 Cambio a entregar
               </p>
+
               <p className="text-4xl font-black text-green-700">
                 ${saleComplete.change.toFixed(2)}
+
                 <span className="ml-1 text-base font-normal text-green-500">
                   MXN
                 </span>
               </p>
+
               {saleComplete.changeDollars !== undefined &&
-               saleComplete.changeDollars > 0 && (
-                <p className="text-sm text-green-500">
-                  ≈ ${saleComplete.changeDollars.toFixed(2)} USD
-                </p>
-              )}
+                saleComplete.changeDollars > 0 && (
+                  <p className="text-sm text-green-500">
+                    ≈ ${saleComplete.changeDollars.toFixed(2)} USD
+                  </p>
+                )}
             </div>
           ) : (
             <div className="rounded-xl border bg-gray-50 p-4">
-              <p className="text-sm text-gray-500">Sin cambio</p>
+              <p className="text-sm text-gray-500">
+                Sin cambio
+              </p>
             </div>
           )}
 

@@ -1,4 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from 'react'
 import qz from 'qz-tray'
 import { connectQz } from '../utils/qzTray'
 
@@ -120,59 +124,69 @@ export function usePrinter() {
     )
 
   const print = useCallback(
-  async (ticketText: string) => {
-    if (!ticketText.trim()) {
-      throw new Error(
-        'El ticket no contiene información para imprimir.',
+    async (ticketText: string) => {
+      if (!ticketText.trim()) {
+        throw new Error(
+          'El ticket no contiene información para imprimir.',
+        )
+      }
+
+      const printerName =
+        selectedPrinter ||
+        localStorage.getItem(
+          PRINTER_STORAGE_KEY,
+        ) ||
+        ''
+
+      if (!printerName) {
+        throw new Error(
+          'Selecciona una impresora antes de cobrar.',
+        )
+      }
+
+      await connectQz()
+
+      const config = qz.configs.create(
+        printerName,
+        {
+          encoding: 'CP850',
+          copies: 1,
+          jobName: 'Ticket de venta',
+        },
       )
-    }
 
-    const printerName =
-      selectedPrinter ||
-      localStorage.getItem(PRINTER_STORAGE_KEY) ||
-      ''
+      const logoUrl =
+        `${window.location.origin}/mineros.png`
 
-    if (!printerName) {
-      throw new Error(
-        'Selecciona una impresora antes de cobrar.',
-      )
-    }
+      const printableTicket =
+        `${ticketText}\n\n\n\n`
 
-    await connectQz()
-
-    const config = qz.configs.create(
-      printerName,
-      {
-        encoding: 'CP850',
-        copies: 1,
-        jobName: 'Ticket de venta',
-      },
-    )
-
-    const printableTicket =
-      `${ticketText}\n\n\n\n\n\n`
-
-    await qz.print(config, [
-      {
-        type: 'raw',
-        format: 'plain',
-        data: printableTicket,
-      },
-    ])
-  },
-  [selectedPrinter],
-)
+      await qz.print(config, [
+        {
+          type: 'raw',
+          format: 'image',
+          flavor: 'file',
+          data: logoUrl,
+          options: {
+            language: 'ESCPOS',
+            dotDensity: 'double',
+            pageWidth: 384,
+          },
+        },
+        {
+          type: 'raw',
+          format: 'plain',
+          data: printableTicket,
+        },
+      ])
+    },
+    [selectedPrinter],
+  )
 
   useEffect(() => {
     void refreshPrinters()
   }, [refreshPrinters])
 
-  return {
-    print,
-    printers,
-    selectedPrinter,
-    setSelectedPrinter,
-    isLoadingPrinters,
-    refreshPrinters,
+  return { print, printers, selectedPrinter, setSelectedPrinter, isLoadingPrinters, refreshPrinters,
   }
 }
