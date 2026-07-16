@@ -157,7 +157,7 @@ export function usePrinter() {
       `${window.location.origin}/logo.png`
 
     const printableTicket =
-      `${ticketText}\n\n\n\n\n\n`
+      `${ticketText}\n\n\n\n`
 
     await qz.print(config, [
       {
@@ -169,6 +169,7 @@ export function usePrinter() {
           language: 'ESCPOS',
           dotDensity: 'double',
           pageWidth: 384,
+          preserveAspectRatio: true,
         },
       },
       {

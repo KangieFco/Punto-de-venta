@@ -152,15 +152,14 @@ public class TicketService : ITicketService
                     PaymentMethod.Other  => "Otro",
                     _                    => sale.PaymentMethod.ToString()
                 };
-                sb.AppendLine(ColLine($"Pago ({methodLabel}):",
-                                    $"${sale.AmountReceived:F2}", width));
+                sb.AppendLine(ColLine($"Pago ({methodLabel}):", $"${sale.AmountReceived:F2}", width));
             }
 
             if (sale.ChangeAmount > 0)
                 sb.AppendLine(ColLine("Cambio:", $"${sale.ChangeAmount:F2}", width));
 
             sb.AppendLine(Line('=', width));
-            sb.AppendLine(Center(storeMsg, width));
+            foreach (var line in storeMsg.Split('\n')) { sb.AppendLine(Center(line.Trim(), width));}
             sb.AppendLine();
             sb.AppendLine();
             sb.AppendLine();
@@ -195,11 +194,11 @@ public class TicketService : ITicketService
 
     private static TicketDto ToDto(Domain.Entities.Ticket t) => new()
     {
-        Id           = t.Id,
-        SaleId       = t.SaleId,
-        Folio        = t.Folio,
+        Id = t.Id,
+        SaleId  = t.SaleId,
+        Folio = t.Folio,
         PrintedCount = t.PrintedCount,
-        LastPrintedAt= t.LastPrintedAt,
-        CreatedAt    = t.CreatedAt
+        LastPrintedAt = t.LastPrintedAt,
+        CreatedAt = t.CreatedAt
     };
 }
