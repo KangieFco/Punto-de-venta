@@ -12,6 +12,7 @@ using PosApi.Middleware;
 using PosApi.Services;
 using PosApi.Services.Interfaces;
 using System.Text;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -77,7 +78,20 @@ builder.Services.AddOpenApi(options =>
 
 var app = builder.Build();
 app.UseMiddleware<ErrorHandlingMiddleware>();
+var imagesPath = "/app/wwwroot/images";
+
+if (!Directory.Exists(imagesPath))
+{
+    Directory.CreateDirectory(imagesPath);
+}
+
 app.UseStaticFiles();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(imagesPath),
+    RequestPath = "/images"
+});
 
 if (app.Environment.IsDevelopment())
 {
