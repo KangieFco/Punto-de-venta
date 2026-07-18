@@ -28,3 +28,4 @@ PosApi/src/PosApi/wwwroot/images/products/
 **/QzCertificates/private-key.pem
 **/QzCertificates/*.pfx
 secrets/
+uploads/images/products/
