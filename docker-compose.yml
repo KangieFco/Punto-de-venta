@@ -29,6 +29,9 @@ services:
 
     container_name: pos-backend
     restart: unless-stopped
+    
+    volumes:
+      - ./uploads/images:/app/wwwroot/images
 
     depends_on:
       sqlserver:
