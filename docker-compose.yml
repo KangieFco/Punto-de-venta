@@ -32,6 +32,7 @@ services:
     
     volumes:
       - ./uploads/images:/app/wwwroot/images
+      - ./secrets/qz:/app/QzCertificates:ro
 
     depends_on:
       sqlserver:
