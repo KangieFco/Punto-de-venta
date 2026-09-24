@@ -29,7 +29,7 @@ services:
 
     container_name: pos-backend
     restart: unless-stopped
-    
+
     volumes:
       - ./uploads/images:/app/wwwroot/images
       - ./secrets/qz:/app/QzCertificates:ro
@@ -65,6 +65,11 @@ services:
 
     ports:
       - "80:80"
+      - "443:443"
+
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./certbot-www:/var/www/certbot
 
 volumes:
   sqlserver_data:
